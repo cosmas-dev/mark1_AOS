@@ -1,0 +1,119 @@
+//package com.cosmasbio.mark1.model
+//
+//enum class ConnectionStage {
+//    Idle,
+//    ConnectingWifi,
+//    WifiConnected,
+//    SocketConnected,
+//    Failed
+//}
+//
+//data class DeviceStatus(
+//    val stage: ConnectionStage = ConnectionStage.Idle,
+//    val wifiConnected: Boolean = false,
+//    val socketConnected: Boolean = false,
+//    val modelName: String = "COSMAS-1000",
+//    val lightOn: Boolean = false,
+//    val temperature: String = "",
+//    val lastMessage: String = "",
+//    val lastError: String? = null,
+//)
+//
+//data class TestDraft(
+//    val name: String = "",
+//    val type: String = "Cortisol",
+//    val info: String = "",
+//    val delaySeconds: String = "0",
+//)
+//
+//data class CaptureResult(
+//    val imagePath: String = "",
+//    val name: String = "",
+//    val type: String = "",
+//    val info: String = "",
+//)
+//
+//data class CaptureUiState(
+//    val capturing: Boolean = false,
+//    val remainingSeconds: Int = 0,
+//    val error: String? = null,
+//)
+//
+//data class AppUiState(
+//    val loading: Boolean = true,
+//    val deviceStatus: DeviceStatus = DeviceStatus(),
+//    val draft: TestDraft = TestDraft(),
+//    val capture: CaptureUiState = CaptureUiState(),
+//)
+package com.cosmasbio.mark1.model
+
+enum class ConnectionStage {
+    Idle,
+    ConnectingWifi,
+    WifiConnected,
+    SocketConnected,
+    Failed
+}
+
+data class DeviceStatus(
+    val stage: ConnectionStage = ConnectionStage.Idle,
+    val wifiConnected: Boolean = false,
+    val socketConnected: Boolean = false,
+    val modelName: String = "COSMAS-1000",
+    val lightOn: Boolean = false,
+    val temperature: String = "",
+    val lastMessage: String = "",
+    val lastError: String? = null,
+)
+
+data class TestDraft(
+    val name: String = "",
+    val type: String = "Cortisol",
+    val info: String = "",
+    val delaySeconds: String = "0",
+)
+
+data class AnalysisReport(
+    val rawJson: String = "",
+    val imagePath: String = "",
+    val imageWidth: Int = 0,
+    val imageHeight: Int = 0,
+    val roiX: Int = 0,
+    val roiY: Int = 0,
+    val roiW: Int = 0,
+    val roiH: Int = 0,
+    val channelName: String = "",
+    val noiseSigma: Double = 0.0,
+    val cPosition: Int? = null,
+    val cSnr: Double? = null,
+    val tPosition: Int? = null,
+    val tSnr: Double? = null,
+    val tDetected: Boolean = false,
+    val tWeak: Boolean = false,
+    val h1SplitValid: Boolean = false,
+    val peakSeparationPx: Double = 0.0,
+    val numPeaks: Int = 0,
+)
+
+data class CaptureResult(
+    val imagePath: String = "",
+    val name: String = "",
+    val type: String = "",
+    val info: String = "",
+    val analysis: AnalysisReport? = null,
+)
+
+data class CaptureUiState(
+    val capturing: Boolean = false,
+    val analyzing: Boolean = false,
+    val remainingSeconds: Int = 0,
+    val error: String? = null,
+)
+
+data class AppUiState(
+    val loading: Boolean = true,
+    val deviceStatus: DeviceStatus = DeviceStatus(),
+    val draft: TestDraft = TestDraft(),
+    val capture: CaptureUiState = CaptureUiState(),
+    val latestCaptureResult: CaptureResult? = null,
+)
