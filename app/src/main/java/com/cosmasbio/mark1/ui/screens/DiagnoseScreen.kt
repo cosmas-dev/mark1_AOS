@@ -25,6 +25,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +35,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +49,12 @@ data class DiagnosisProfile(
     val diagnosisType: String,
     val diagnosisItems: String,
     val isNew: Boolean = true,
+    // 서버(persons 테이블)로 함께 전송되는 대상자 정보.
+    // 비워두면 이름만 저장되므로 목록에서 선택한 검사도 반드시 채워서 넘긴다.
+    val dateOfBirth: String = "",
+    val email: String = "",
+    val phoneNumber: String = "",
+    val organization: String = "",
 )
 
 private val DiagnoseTop = Color(0xFFE8F0F5)
@@ -54,11 +63,36 @@ private val DiagnoseText = Color(0xFF202326)
 private val DiagnoseMutedText = Color(0xFF555A5E)
 
 private val sampleProfiles = listOf(
-    DiagnosisProfile("2025-01-23", "Arlene", "Multi-Panel Drug Test", "THC, FYL"),
-    DiagnosisProfile("2025-01-23", "Darrell", "Multi-Panel Drug Test", "THC, FYL"),
-    DiagnosisProfile("2025-01-23", "Eduardo", "Multi-Panel Drug Test", "THC, FYL"),
-    DiagnosisProfile("2025-01-23", "Arthur", "Multi-Panel Drug Test", "THC, FYL"),
-    DiagnosisProfile("2025-01-23", "Marlene", "Multi-Panel Drug Test", "THC, FYL"),
+//    DiagnosisProfile("2025-01-23", "Arlene", "Multi-Panel Drug Test", "THC, FYL"),
+//    DiagnosisProfile("2025-01-23", "Darrell", "Multi-Panel Drug Test", "THC, FYL"),
+//    DiagnosisProfile("2025-01-23", "Eduardo", "Multi-Panel Drug Test", "THC, FYL"),
+//    DiagnosisProfile("2025-01-23", "Arthur", "Multi-Panel Drug Test", "THC, FYL"),
+//    DiagnosisProfile("2025-01-23", "Marlene", "Multi-Panel Drug Test", "THC, FYL"),
+    DiagnosisProfile(
+        "2025-01-23", "박경찰", "Multi-Panel Drug Test", "THC, FYL",
+        dateOfBirth = "1988-03-14", email = "park@police.go.kr",
+        phoneNumber = "010-2841-7702", organization = "경찰청 마약수사대",
+    ),
+    DiagnosisProfile(
+        "2025-01-23", "김경감", "Multi-Panel Drug Test", "THC, FYL",
+        dateOfBirth = "1979-11-02", email = "kim@police.go.kr",
+        phoneNumber = "010-3315-8890", organization = "경찰청 강력계",
+    ),
+    DiagnosisProfile(
+        "2025-01-23", "고길동", "Multi-Panel Drug Test", "THC, FYL",
+        dateOfBirth = "1995-06-27", email = "ko@example.com",
+        phoneNumber = "010-7742-1163", organization = "서울지방경찰청",
+    ),
+    DiagnosisProfile(
+        "2025-01-23", "김철수", "Multi-Panel Drug Test", "THC, FYL",
+        dateOfBirth = "2001-01-09", email = "kimcs@example.com",
+        phoneNumber = "010-9026-4417", organization = "서울지방경찰청",
+    ),
+    DiagnosisProfile(
+        "2025-01-23", "유재석", "Multi-Panel Drug Test", "THC, FYL",
+        dateOfBirth = "1992-08-30", email = "yoo@example.com",
+        phoneNumber = "010-5518-2274", organization = "경기남부경찰청",
+    ),
 )
 
 @Composable
@@ -93,18 +127,22 @@ fun DiagnoseScreen(
                     DiagnoseHeader(onClose = onClose)
                     Spacer(Modifier.height(51.dp))
                     Text(
-                        text = "Please select the basic\ninformation for the diagnosis.",
+//                        text = "Please select the basic\ninformation for the diagnosis.",
+                        text = "진단할 대상자를 선택해주세요.",
                         color = DiagnoseText,
                         fontSize = 28.sp,
                         lineHeight = 35.sp,
                         fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        text = "If no information has been registered, please add it.",
+//                        text = "If no information has been registered, please add it.",
+                        text = "등록된 정보가 없다면 새로 추가해 주세요.",
                         color = DiagnoseText,
                         fontSize = 18.sp,
                         lineHeight = 24.sp,
+                        textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(23.dp))
                 }
@@ -147,7 +185,8 @@ private fun DiagnoseHeader(onClose: () -> Unit) {
             .height(72.dp),
     ) {
         Text(
-            text = "Diagnose",
+            // text = "Diagnose",
+            text = "진단",
             modifier = Modifier.align(Alignment.Center),
             color = Color.Black,
             fontSize = 20.sp,
@@ -213,7 +252,21 @@ private fun DiagnosisProfileCard(
                                 .background(Color(0xFFFF5B65)),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("N", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                "N",
+                                color = Color.White,
+                                fontSize = 9.sp,
+                                lineHeight = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                style = LocalTextStyle.current.copy(
+                                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                                    lineHeightStyle = LineHeightStyle(
+                                        alignment = LineHeightStyle.Alignment.Center,
+                                        trim = LineHeightStyle.Trim.Both,
+                                    ),
+                                ),
+                            )
                         }
                     }
                 }
@@ -244,9 +297,11 @@ private fun DiagnosisProfileCard(
         }
 
         Spacer(Modifier.height(13.dp))
-        ProfileDetailRow("Diagnosis Type", profile.diagnosisType)
+//        ProfileDetailRow("Diagnosis Type", profile.diagnosisType)
+        ProfileDetailRow("진단 유형", profile.diagnosisType)
         Spacer(Modifier.height(8.dp))
-        ProfileDetailRow("Diagnosis Items", profile.diagnosisItems)
+//        ProfileDetailRow("Diagnosis Items", profile.diagnosisItems)
+        ProfileDetailRow("검사 항목", profile.diagnosisItems)
     }
 }
 

@@ -82,6 +82,8 @@ fun HomeScreen(
     onReadTemperature: () -> Unit,
     onApplySetting: (String, String, String) -> Unit = { _, _, _ -> },
     onStartDiagnosis: () -> Unit,
+    onNotificationClick: () -> Unit,
+    onMenuClick: () -> Unit,
 ) {
     var showSettingsDialog by remember { mutableStateOf(false) }
     var selectedSetting by remember { mutableStateOf("FOCUS") }
@@ -107,8 +109,8 @@ fun HomeScreen(
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .padding(horizontal = 18.dp, vertical = 18.dp),
-                onMenuClick = { showSettingsDialog = true },
-                onNotificationClick = onReconnect,
+                onMenuClick = onMenuClick,
+                onNotificationClick = onNotificationClick,
             )
 
             Column(
@@ -120,7 +122,8 @@ fun HomeScreen(
                 Spacer(Modifier.height(137.dp))
 
                 Text(
-                    text = "Hello,\nMr Cosmas",
+//                    text = "Hello,\nMr Cosmas",
+                    text = "반갑습니다, \n고스마님",
                     color = Color.Black,
                     fontSize = 34.sp,
                     lineHeight = 41.sp,
@@ -144,7 +147,8 @@ fun HomeScreen(
                 Spacer(Modifier.weight(1f))
 
                 Text(
-                    text = "Last updated\n23 min ago",
+//                    text = "Last updated\n23 min ago",
+                    text = "마지막 업데이트\n23분 전",
                     color = MutedText,
                     fontSize = 16.sp,
                     lineHeight = 20.sp,

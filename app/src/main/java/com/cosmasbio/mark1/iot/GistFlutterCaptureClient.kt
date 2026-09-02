@@ -5,9 +5,8 @@ import android.util.Log
 import com.cosmasbio.mark1.data.device.Mark1DeviceManager
 import com.cosmasbio.mark1.model.CaptureResult
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.security.MessageDigest
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -19,48 +18,45 @@ class GistFlutterCaptureClient(
         private const val TAG = "GistFlutterCapture"
     }
 
+    /**
+     * 촬영 후 저장.
+     *
+     * 개인정보 보호: 파일명에 성명/검사유형/검사정보 등 개인정보를 절대 포함하지 않고
+     * UUID 기반 파일명(예: 550e8400-e29b-41d4-a716-446655440000.jpg)을 사용한다.
+     * name/type/info 는 반환 객체(메모리)와 Room DB 에만 유지된다.
+     * 무결성 검증을 위해 촬영 직후 SHA-256 을 계산한다.
+     */
     suspend fun captureAndSave(
         name: String,
         type: String,
         info: String,
     ): CaptureResult = withContext(Dispatchers.IO) {
         val imageBytes = deviceManager.captureImageBytes()
-        val file = saveImageBytes(name = name, type = type, info = info, data = imageBytes)
-        CaptureResult(imagePath = file.absolutePath, name = name, type = type, info = info)
-    }
 
-    private fun saveImageBytes(
-        name: String,
-        type: String,
-        info: String,
-        data: ByteArray,
-    ): File {
-        val ext = if (isPng(data)) "png" else "jpg"
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val fileName = listOf(safeMeta(name), safeMeta(type), safeMeta(info), timestamp)
-            .filter { it.isNotBlank() }
-            .joinToString("_") + ".$ext"
+        val captureId = UUID.randomUUID().toString()
+        val ext = if (isPng(imageBytes)) "png" else "jpg"
         val dir = File(context.filesDir, "captures").apply { mkdirs() }
-        val file = File(dir, fileName)
-        file.writeBytes(data)
-        Log.d(TAG, "saved: ${file.absolutePath}")
-        return file
+        val file = File(dir, "$captureId.$ext")
+        file.writeBytes(imageBytes)
+
+        val sha256 = sha256Hex(imageBytes)
+        Log.d(TAG, "saved: ${file.absolutePath} sha256=$sha256")
+
+        CaptureResult(
+            imagePath = file.absolutePath,
+            name = name,
+            type = type,
+            info = info,
+            captureId = captureId,
+            imageSha256 = sha256,
+            capturedAtMillis = System.currentTimeMillis(),
+        )
     }
 
-    private fun safeMeta(value: String): String {
-        return value.trim()
-            .replace(Regex("""[\\/:*?"<>|]+"""), "_")
-            .replace(Regex("\\s+"), "_")
-            .replace(Regex("_+"), "_")
-            .trim('_')
-    }
-
-    private fun isJpeg(data: ByteArray): Boolean =
-        data.size > 4 &&
-            data[0] == 0xFF.toByte() &&
-            data[1] == 0xD8.toByte() &&
-            data[data.size - 2] == 0xFF.toByte() &&
-            data[data.size - 1] == 0xD9.toByte()
+    private fun sha256Hex(data: ByteArray): String =
+        MessageDigest.getInstance("SHA-256")
+            .digest(data)
+            .joinToString("") { "%02x".format(it) }
 
     private fun isPng(data: ByteArray): Boolean =
         data.size >= 8 &&

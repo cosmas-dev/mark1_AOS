@@ -71,6 +71,8 @@ data class TestDraft(
     val type: String = "Cortisol",
     val info: String = "",
     val delaySeconds: String = "0",
+    // AddDiagnosisDetailsScreen 에서 입력한 대상자 정보 전체
+    val person: PersonInfo = PersonInfo(),
 )
 
 data class AnalysisReport(
@@ -101,6 +103,11 @@ data class CaptureResult(
     val type: String = "",
     val info: String = "",
     val analysis: AnalysisReport? = null,
+    // UUID 기반 촬영 식별자(파일명과 동일). 개인정보는 파일명에 포함하지 않는다.
+    val captureId: String = "",
+    // 촬영 직후 계산한 원본 이미지 SHA-256 (무결성 검증용)
+    val imageSha256: String = "",
+    val capturedAtMillis: Long = 0L,
 )
 
 data class CaptureUiState(
@@ -116,4 +123,8 @@ data class AppUiState(
     val draft: TestDraft = TestDraft(),
     val capture: CaptureUiState = CaptureUiState(),
     val latestCaptureResult: CaptureResult? = null,
+)
+data class LoginUiState(
+    val submitting: Boolean = false,
+    val error: String? = null,
 )

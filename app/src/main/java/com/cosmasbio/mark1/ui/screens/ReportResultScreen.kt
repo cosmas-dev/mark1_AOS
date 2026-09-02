@@ -1,10 +1,12 @@
 package com.cosmasbio.mark1.ui.screens
 
+import android.graphics.BitmapFactory
 import android.graphics.Paint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,7 +30,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,12 +47,15 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
+import com.cosmasbio.mark1.model.CaptureResult
 
 private val ReportTop = Color(0xFFE8F0F5)
 private val ReportBottom = Color(0xFFC5D1D9)
@@ -57,8 +63,10 @@ private val ReportBottom = Color(0xFFC5D1D9)
 @Composable
 fun ReportResultScreen(
     profileName: String,
+    captureResult: CaptureResult?,
     onBack: () -> Unit,
     onRestart: () -> Unit,
+    onSaveAndAct: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var detailsSelected by remember { mutableStateOf(false) }
@@ -73,11 +81,12 @@ fun ReportResultScreen(
             ReportHeader(onBack)
             Text("Jan 23, 2025, 4:55 PM", color = Color(0xFF7D8589), fontSize = 12.sp)
             Spacer(Modifier.height(5.dp))
-            Text("COSMAS Report", color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+//            Text("COSMAS Report", color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("고스마님의 보고서", color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             ReportTabs(detailsSelected) { detailsSelected = it }
             Spacer(Modifier.height(20.dp))
-            if (detailsSelected) ReportDetails(profileName) else ReportSummary()
+            if (detailsSelected) ReportDetails(profileName) else ReportSummary(captureResult, onSaveAndAct)
         }
         ReportBottomActions(
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -93,9 +102,10 @@ private fun ReportHeader(onBack: () -> Unit) {
         CircleAction(Modifier.align(Alignment.CenterStart), onBack) {
             Icon(Icons.Rounded.ArrowBack, "Back", modifier = Modifier.size(20.dp))
         }
-        Text("Result", Modifier.align(Alignment.Center), fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        // Text("Result", Modifier.align(Alignment.Center), fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Text("검사 결과", Modifier.align(Alignment.Center), fontSize = 17.sp, fontWeight = FontWeight.Bold)
         CircleAction(Modifier.align(Alignment.CenterEnd), {}) {
-            Icon(Icons.Rounded.Share, "Share", modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.IosShare, "내보내기", modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -105,7 +115,8 @@ private fun ReportTabs(details: Boolean, onSelect: (Boolean) -> Unit) {
     Row(
         Modifier.fillMaxWidth().height(44.dp).clip(CircleShape).background(Color.White.copy(.52f)).padding(3.dp),
     ) {
-        listOf(false to "Summary", true to "Details").forEach { (value, title) ->
+//        listOf(false to "Summary", true to "Details").forEach { (value, title) ->
+        listOf(false to "요약", true to "상세정보").forEach { (value, title) ->
             Box(
                 Modifier.weight(1f).fillMaxSize().clip(CircleShape)
                     .background(if (details == value) Color.White else Color.Transparent)
@@ -119,25 +130,111 @@ private fun ReportTabs(details: Boolean, onSelect: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun ReportSummary() {
+private fun ReportSummary(captureResult: CaptureResult?, onSaveAndAct: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().padding(bottom = 92.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        ResultCard("M", "arijuana", "0.3", "ng/mL", true)
-        ResultCard("F", "entanyl", "10", "ng/mL", false)
-        Box(
-            Modifier.fillMaxWidth().height(44.dp).clip(CircleShape)
-                .background(Brush.horizontalGradient(listOf(Color(0xFFE64E4E), Color(0xFFFF747A)))),
-            contentAlignment = Alignment.Center,
-        ) { Text("●  SOS", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold) }
+        // ResultCard("M", "arijuana", "0.3", "ng/mL", true)
+        ResultCard("마리화나", "", "0.3", "ng/mL", true)
+        // ResultCard("F", "entanyl", "10", "ng/mL", false)
+        ResultCard("펜타닐", "", "21.5", "ng/mL", false)
+        Row(
+            modifier = Modifier.fillMaxWidth().height(44.dp).clip(CircleShape)
+                .background(Brush.horizontalGradient(listOf(Color(0xFFE64E4E), Color(0xFFFF747A))))
+                .clickable(onClick = onSaveAndAct),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.VerifiedUser,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(Modifier.width(7.dp))
+            Text(
+                "결과 저장 및 조치",
+                color = Color.White,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+
+        CaptureDebugSection(captureResult)
     }
+}
+
+/** 값 확인용 임시 섹션. 촬영 이미지와 분석 원본값을 그대로 나열한다. */
+@Composable
+private fun CaptureDebugSection(captureResult: CaptureResult?) {
+    Column(
+        Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text("촬영 이미지 / 분석 원본값", color = Color.Black, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+
+        if (captureResult == null) {
+            Text("아직 촬영/분석 결과가 없습니다.", color = Color(0xFF7D8589), fontSize = 12.sp)
+            return@Column
+        }
+
+        val bitmap = remember(captureResult.imagePath) {
+            runCatching { BitmapFactory.decodeFile(captureResult.imagePath) }.getOrNull()
+        }
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "촬영 이미지",
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.FillWidth,
+            )
+        } else {
+            Text("이미지를 불러올 수 없습니다.", color = Color(0xFFE64E4E), fontSize = 12.sp)
+        }
+
+        DebugValue("imagePath", captureResult.imagePath)
+        DebugValue("name", captureResult.name)
+        DebugValue("type", captureResult.type)
+        DebugValue("info", captureResult.info)
+
+        val analysis = captureResult.analysis
+        if (analysis == null) {
+            Text("분석 결과 없음", color = Color(0xFFE64E4E), fontSize = 12.sp)
+            return@Column
+        }
+
+        Spacer(Modifier.height(4.dp))
+        DebugValue("tDetected", analysis.tDetected.toString())
+        DebugValue("tWeak", analysis.tWeak.toString())
+        DebugValue("cPosition", analysis.cPosition?.toString() ?: "null")
+        DebugValue("cSnr", analysis.cSnr?.toString() ?: "null")
+        DebugValue("tPosition", analysis.tPosition?.toString() ?: "null")
+        DebugValue("tSnr", analysis.tSnr?.toString() ?: "null")
+        DebugValue("noiseSigma", analysis.noiseSigma.toString())
+        DebugValue("numPeaks", analysis.numPeaks.toString())
+        DebugValue("peakSeparationPx", analysis.peakSeparationPx.toString())
+        DebugValue("h1SplitValid", analysis.h1SplitValid.toString())
+        DebugValue("channelName", analysis.channelName)
+        DebugValue("image", "${analysis.imageWidth} x ${analysis.imageHeight}")
+        DebugValue("roi", "x=${analysis.roiX} y=${analysis.roiY} w=${analysis.roiW} h=${analysis.roiH}")
+        DebugValue("analysis.imagePath", analysis.imagePath)
+
+        Spacer(Modifier.height(4.dp))
+        Text("rawJson", color = Color.Black, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        Text(analysis.rawJson, color = Color(0xFF25282A), fontSize = 10.sp)
+    }
+}
+
+@Composable
+private fun DebugValue(label: String, value: String) {
+    Text("$label: $value", color = Color(0xFF25282A), fontSize = 12.sp)
 }
 
 @Composable
 private fun ResultCard(initial: String, name: String, value: String, unit: String, negative: Boolean) {
     val fontScale = LocalDensity.current.fontScale
-    val initialSize = (36f / fontScale).sp
+    val initialSize = (34f / fontScale).sp
     val nameSize = (18f / fontScale).sp
     val valueSize = (36f / fontScale).sp
     val unitSize = (9f / fontScale).sp
@@ -307,20 +404,34 @@ private fun ReportDetails(profileName: String) {
             .clip(RoundedCornerShape(20.dp)).background(Color.White.copy(.63f)).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        DetailSection("Diagnostic Products")
-        DetailRow("Device", "COSMAS001  ›")
-        DetailRow("Kit", "COSMAS001 KIT  ›")
-        DetailRow("Location", "8502 Preston Rd. Inglewood, Maine 98380")
-        Spacer(Modifier.height(8.dp)); DetailSection("Profile")
-        DetailRow("Name", profileName.ifBlank { "kim" })
-        DetailRow("Age", "31")
-        DetailRow("Email", "cosmas@cosmas.com")
-        DetailRow("Phone", "+82-10-1234-5678")
-        DetailRow("Address", "8502 Preston Rd. Inglewood, Maine 98380")
-        Spacer(Modifier.height(8.dp)); DetailSection("Company")
-        DetailRow("Company Name", "cosmas")
-        DetailRow("Car Type", "Truck")
-        DetailRow("Plate Number", "ABC-1234")
+        // DetailSection("Diagnostic Products")
+        // DetailRow("Device", "COSMAS001  ›")
+        // DetailRow("Kit", "COSMAS001 KIT  ›")
+        // DetailRow("Location", "8502 Preston Rd. Inglewood, Maine 98380")
+        // Spacer(Modifier.height(8.dp)); DetailSection("Profile")
+        // DetailRow("Name", profileName.ifBlank { "kim" })
+        // DetailRow("Age", "31")
+        // DetailRow("Email", "cosmas@cosmas.com")
+        // DetailRow("Phone", "+82-10-1234-5678")
+        // DetailRow("Address", "8502 Preston Rd. Inglewood, Maine 98380")
+        // Spacer(Modifier.height(8.dp)); DetailSection("Company")
+        // DetailRow("Company Name", "cosmas")
+        // DetailRow("Car Type", "Truck")
+        // DetailRow("Plate Number", "ABC-1234")
+        DetailSection("진단 제품 정보")
+        DetailRow("모델명", "COSMAS001  ›")
+        DetailRow("키트", "COSMAS001 KIT  ›")
+        DetailRow("위치", "서울 관악구 봉천로")
+        Spacer(Modifier.height(8.dp)); DetailSection("대상자 정보")
+        DetailRow("이름", profileName.ifBlank { "오류" })
+        DetailRow("나이", "31")
+        DetailRow("이메일", "cosmas@cosmas.com")
+        DetailRow("연락처", "+82-10-1234-5678")
+        DetailRow("주소", "서울 관악구 봉천로")
+        Spacer(Modifier.height(8.dp)); DetailSection("소속 정보")
+        DetailRow("회사명", "고스마")
+        DetailRow("차량 종류", "Truck")
+        DetailRow("차량 번호", "123가 4567")
     }
 }
 
@@ -336,10 +447,12 @@ private fun ReportDetails(profileName: String) {
 private fun ReportBottomActions(modifier: Modifier, onBack: () -> Unit, onRestart: () -> Unit) {
     Row(modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(Modifier.weight(.28f).height(58.dp).shadow(7.dp, CircleShape).clip(CircleShape).background(Color.White).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
-            Text("Cancel", fontWeight = FontWeight.Bold)
+            // Text("Cancel", fontWeight = FontWeight.Bold)
+            Text("취소", fontWeight = FontWeight.Bold)
         }
         Box(Modifier.weight(.72f).height(58.dp).clip(CircleShape).background(Color.Black).clickable(onClick = onRestart), contentAlignment = Alignment.Center) {
-            Text("Restart", color = Color.White, fontWeight = FontWeight.Bold)
+            // Text("Restart", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("재검사", color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -102,16 +102,18 @@ fun ConnectDeviceScreen(
 
                 Text(
                     text = if (isConnected) {
-                        "Reader connected.\nStart diagnosis now?"
+//                        "Reader connected.\nStart diagnosis now?"
+                          "리더기 연결 완료.\n진단을 시작할까요?"
                     } else {
-                        "Connecting the reader will start the diagnosis. Would you like to connect?"
+//                        "Connecting the reader will start the diagnosis. Would you like to connect?"
+                          "리더기를 연결하고\n진단을 시작하세요."
                     },
                     modifier = Modifier.fillMaxWidth(),
                     color = Color(0xFF202124),
                     fontSize = 26.sp,
                     lineHeight = 33.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Start,
+                    textAlign = TextAlign.Center,
                 )
 
 
@@ -147,7 +149,8 @@ fun ConnectDeviceScreen(
             }
 
             Text(
-                text = "Need help?",
+//                text = "Need help?",
+                text = "도움이 필요하신가요?",
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 110.dp),
@@ -157,7 +160,8 @@ fun ConnectDeviceScreen(
             )
 
             ConnectButton(
-                text = if (isConnected) "Continue" else "Connect",
+//                text = if (isConnected) "Continue" else "Connect",
+                text = if (isConnected) "진단 시작하기" else "연결하기",
                 onClick = if (isConnected) onContinue else onConnect,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -254,7 +258,8 @@ private fun ConnectTopBar(
         Spacer(modifier = Modifier.size(48.dp))
 
         Text(
-            text = "Connect Device",
+            // text = "Connect Device",
+            text = "기기 연결",
             modifier = Modifier.weight(1f),
             color = Color.Black,
             fontSize = 20.sp,

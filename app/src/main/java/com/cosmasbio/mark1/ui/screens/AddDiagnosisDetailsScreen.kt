@@ -121,15 +121,18 @@ fun AddDiagnosisDetailsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Spacer(Modifier.height(4.dp))
-                SectionTitle("Basic Info")
+                // SectionTitle("Basic Info")
+                SectionTitle("기본 정보")
 
                 LabeledField(
-                    label = "Name",
+                    // label = "Name",
+                    label = "이름",
                     value = name,
                     onValueChange = { name = it },
                 )
                 LabeledField(
-                    label = "Date of Birth",
+                    // label = "Date of Birth",
+                    label = "생년월일",
                     value = dateOfBirth,
                     onValueChange = { dateOfBirth = it.filter { ch -> ch.isDigit() || ch == '/' } },
                     placeholder = "MM/DD/YYYY",
@@ -154,17 +157,20 @@ fun AddDiagnosisDetailsScreen(
                     onValueChange = { email = it },
                 )
                 LabeledField(
-                    label = "Phone Number",
+                    // label = "Phone Number",
+                    label = "연락처",
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it.filter { ch -> ch.isDigit() || ch == '-' || ch == '+' } },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 )
 
                 Spacer(Modifier.height(8.dp))
-                SectionTitle("Company")
+                // SectionTitle("Company")
+                SectionTitle("소속")
 
                 Column {
-                    FieldLabel("Company")
+                    // FieldLabel("Company")
+                    FieldLabel("회사")
                     Spacer(Modifier.height(6.dp))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -174,7 +180,8 @@ fun AddDiagnosisDetailsScreen(
                             FieldContent(
                                 value = company,
                                 onValueChange = { company = it },
-                                placeholder = "Company name",
+                                // placeholder = "Company name",
+                                placeholder = "회사명",
                             )
                         }
                         SearchButton(onClick = { /* TODO: company lookup */ })
@@ -234,7 +241,8 @@ private val dateOfBirthFormatter: DateTimeFormatter = DateTimeFormatter.ofPatter
 private fun DetailsHeader(onClose: () -> Unit) {
     Box(Modifier.fillMaxWidth().height(72.dp)) {
         Text(
-            text = "Add Diagnosis Details",
+//            text = "Add Diagnosis Details",
+            text = "신규 등록",
             modifier = Modifier.align(Alignment.Center),
             color = Color.Black,
             fontSize = 19.sp,
@@ -365,7 +373,8 @@ private fun SearchButton(onClick: () -> Unit) {
             .padding(horizontal = 22.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text("Search", color = Color(0xFF6B7278), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        // Text("Search", color = Color(0xFF6B7278), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text("검색", color = Color(0xFF6B7278), fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -385,7 +394,8 @@ private fun RegisterButton(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            "Register",
+            // "Register",
+            "등록",
             color = if (enabled) Color.White else Color.White.copy(alpha = .7f),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,

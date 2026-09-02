@@ -106,9 +106,11 @@ fun ScanScreen(
 
             Text(
                 text = if (scanComplete) {
-                    "Scan complete Your\nanalysis is ready to begin"
+                    // "Scan complete Your\nanalysis is ready to begin"
+                    "스캔 완료\n분석할 준비가 되었습니다."
                 } else {
-                    "Please wait\nwhile we scan your test"
+                    // "Please wait\nwhile we scan your test"
+                    "키트를 스캔하고 있습니다."
                 },
                 color = ScanInk,
                 fontSize = 24.sp,
@@ -118,7 +120,7 @@ fun ScanScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = if (scanComplete) "" else "This may take up to 1 minutes",
+                text = if (scanComplete) "" else "최대 1분 정도 소요될 수 있습니다.", // "This may take up to 1 minutes",
                 color = ScanInk,
                 fontSize = 18.sp,
             )
@@ -134,7 +136,7 @@ fun ScanScreen(
             Spacer(Modifier.height(30.dp))
 
             Text(
-                text = if (scanComplete) "Scan complete" else "Scanning…",
+                text = if (scanComplete) "스캔 완료" else "스캔 중...",
                 color = Color(0xFF7D8589),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
@@ -167,12 +169,6 @@ private fun AnimatedKit(
         ),
         label = "kit_light_sweep",
     )
-    val orbit by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(if (interactionBoost) 900 else 4_800)),
-        label = "scan_orbit",
-    )
     val pulse by transition.animateFloat(
         initialValue = .25f,
         targetValue = .68f,
@@ -193,29 +189,20 @@ private fun AnimatedKit(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val center = Offset(size.width / 2f, size.height / 2f)
-            val ringColor = ScanBlue.copy(alpha = if (scanComplete) .25f else .16f + pulse * .16f)
-
-            listOf(88f, 132f, 176f).forEachIndexed { index, radius ->
-                drawOval(
-                    color = ringColor,
-                    topLeft = Offset(center.x - radius, center.y - radius * .35f),
-                    size = androidx.compose.ui.geometry.Size(radius * 2f, radius * .70f),
-                    style = Stroke(width = 3f, cap = StrokeCap.Round),
-                )
-                val angle = Math.toRadians((orbit + index * 120f).toDouble())
-                drawCircle(
-                    color = ScanBlue.copy(alpha = .20f + pulse * .25f),
-                    radius = 9f + index * 2f,
-                    center = Offset(
-                        center.x + kotlin.math.cos(angle).toFloat() * radius,
-                        center.y + kotlin.math.sin(angle).toFloat() * radius * .35f,
-                    ),
-                )
-            }
-
-        }
+//        Canvas(Modifier.fillMaxSize()) {
+//            val center = Offset(size.width / 2f, size.height / 2f)
+//            val ringColor = ScanBlue.copy(alpha = if (scanComplete) .25f else .16f + pulse * .16f)
+//
+//            listOf(88f, 132f, 176f).forEach { radius ->
+//                drawOval(
+//                    color = ringColor,
+//                    topLeft = Offset(center.x - radius, center.y - radius * .35f),
+//                    size = androidx.compose.ui.geometry.Size(radius * 2f, radius * .70f),
+//                    style = Stroke(width = 3f, cap = StrokeCap.Round),
+//                )
+//            }
+//
+//        }
 
         Image(
             painter = painterResource(R.drawable.kit),
@@ -252,7 +239,8 @@ private fun AnimatedKit(
 private fun ScanHeader(onClose: () -> Unit) {
     Box(Modifier.fillMaxWidth().height(72.dp)) {
         Text(
-            text = "Diagnose",
+            // text = "Diagnose",
+            text = "진단",
             modifier = Modifier.align(Alignment.Center),
             color = Color.Black,
             fontSize = 20.sp,
@@ -298,7 +286,7 @@ private fun ScanActions(
                 .clickable(onClick = onCancel),
             contentAlignment = Alignment.Center,
         ) {
-            Text("Cancel", color = ScanInk, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("취소", color = ScanInk, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         Box(
             modifier = Modifier
@@ -310,7 +298,8 @@ private fun ScanActions(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                "Continue",
+                // "Continue",
+                "분석 시작",
                 color = if (enabled) Color.White else Color.White.copy(alpha = .38f),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
