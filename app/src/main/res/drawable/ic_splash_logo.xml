@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    스플래시 아이콘.
+    시스템이 아이콘 캔버스의 가운데 2/3 만 보여주므로, 앱 아이콘 전경(D)을
+    inset 으로 한 번 더 줄여 어떤 기기에서도 글자가 잘리지 않게 한다.
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@mipmap/ic_launcher_foreground"
+    android:inset="16%" />

@@ -26,6 +26,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,13 +66,16 @@ private val LoginError = Color(0xFFE0403F)
 fun LoginScreen(
     uiState: LoginUiState,
     onBack: () -> Unit,
-    onSubmit: (email: String, password: String) -> Unit,
+    onSubmit: (email: String, password: String, saveBiometric: Boolean) -> Unit,
     onClearError: () -> Unit,
+    onShowMessage: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var saveBiometric by rememberSaveable { mutableStateOf(false) }
 
+    val biometric = rememberBiometricLoginController()
     val emailValid = remember(email) { isValidEmail(email) }
     val canSubmit = email.isNotBlank() && password.isNotBlank() && !uiState.submitting
 
@@ -138,6 +143,14 @@ fun LoginScreen(
                 )
             }
 
+            if (biometric.available && !biometric.hasSaved) {
+                Spacer(Modifier.height(14.dp))
+                SaveBiometricToggle(
+                    checked = saveBiometric,
+                    onCheckedChange = { saveBiometric = it },
+                )
+            }
+
             Spacer(Modifier.height(34.dp))
             AccountHelpLinks()
 
@@ -145,8 +158,30 @@ fun LoginScreen(
             SubmitButton(
                 enabled = canSubmit,
                 submitting = uiState.submitting,
-                onClick = { onSubmit(email, password) },
+                onClick = { onSubmit(email, password, saveBiometric) },
             )
+
+            if (biometric.hasSaved) {
+                Spacer(Modifier.height(12.dp))
+                BiometricLoginButton(
+                    email = biometric.savedEmail.orEmpty(),
+                    enabled = !uiState.submitting,
+                    onClick = {
+                        biometric.login(
+                            onSuccess = { savedEmail, savedPassword ->
+                                email = savedEmail
+                                password = savedPassword
+                                onSubmit(savedEmail, savedPassword, false)
+                            },
+                            onError = onShowMessage,
+                        )
+                    },
+                    onClear = {
+                        biometric.clear()
+                        onShowMessage("저장된 생체인증 로그인을 삭제했습니다.")
+                    },
+                )
+            }
         }
     }
 }
@@ -284,6 +319,96 @@ private fun SubmitButton(enabled: Boolean, submitting: Boolean, onClick: () -> U
             textDecoration = TextDecoration.Underline,
         )
     }
+}
+
+@Composable
+private fun SaveBiometricToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { onCheckedChange(!checked) },
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(20.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(if (checked) LoginCheckBlue else Color.Transparent)
+                .border(
+                    width = 1.5.dp,
+                    color = if (checked) LoginCheckBlue else LoginFieldBorder,
+                    shape = RoundedCornerShape(6.dp),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checked) {
+                Icon(
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = "다음부터 생체인증으로 로그인",
+            color = LoginLabel,
+            fontSize = 14.sp,
+        )
+    }
+}
+
+@Composable
+private fun BiometricLoginButton(
+    email: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    onClear: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+            .clip(RoundedCornerShape(30.dp))
+            .border(1.5.dp, LoginCheckBlue, RoundedCornerShape(30.dp))
+            .clickable(enabled = enabled, onClick = onClick),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Fingerprint,
+            contentDescription = null,
+            tint = LoginCheckBlue,
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = "생체인증으로 로그인",
+            color = LoginCheckBlue,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+
+    Spacer(Modifier.height(10.dp))
+    Text(
+        text = if (email.isBlank()) "저장된 로그인 삭제" else "$email · 저장 해제",
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClear,
+            ),
+        color = LoginLabel,
+        fontSize = 13.sp,
+        textAlign = TextAlign.Center,
+    )
 }
 
 private fun isValidEmail(value: String): Boolean =

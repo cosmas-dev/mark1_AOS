@@ -69,27 +69,27 @@ private val sampleProfiles = listOf(
 //    DiagnosisProfile("2025-01-23", "Arthur", "Multi-Panel Drug Test", "THC, FYL"),
 //    DiagnosisProfile("2025-01-23", "Marlene", "Multi-Panel Drug Test", "THC, FYL"),
     DiagnosisProfile(
-        "2025-01-23", "박경찰", "Multi-Panel Drug Test", "THC, FYL",
+        "2026-08-23", "박경찰", "Multi-Panel Drug Test", "THC, FYL",
         dateOfBirth = "1988-03-14", email = "park@police.go.kr",
         phoneNumber = "010-2841-7702", organization = "경찰청 마약수사대",
     ),
     DiagnosisProfile(
-        "2025-01-23", "김경감", "Multi-Panel Drug Test", "THC, FYL",
+        "2026-08-23", "김경감", "Multi-Panel Drug Test", "THC, FYL",
         dateOfBirth = "1979-11-02", email = "kim@police.go.kr",
         phoneNumber = "010-3315-8890", organization = "경찰청 강력계",
     ),
     DiagnosisProfile(
-        "2025-01-23", "고길동", "Multi-Panel Drug Test", "THC, FYL",
+        "2026-08-23", "고길동", "Multi-Panel Drug Test", "THC, FYL",
         dateOfBirth = "1995-06-27", email = "ko@example.com",
         phoneNumber = "010-7742-1163", organization = "서울지방경찰청",
     ),
     DiagnosisProfile(
-        "2025-01-23", "김철수", "Multi-Panel Drug Test", "THC, FYL",
+        "2026-08-23", "김철수", "Multi-Panel Drug Test", "THC, FYL",
         dateOfBirth = "2001-01-09", email = "kimcs@example.com",
         phoneNumber = "010-9026-4417", organization = "서울지방경찰청",
     ),
     DiagnosisProfile(
-        "2025-01-23", "유재석", "Multi-Panel Drug Test", "THC, FYL",
+        "2026-08-23", "유재석", "Multi-Panel Drug Test", "THC, FYL",
         dateOfBirth = "1992-08-30", email = "yoo@example.com",
         phoneNumber = "010-5518-2274", organization = "경기남부경찰청",
     ),

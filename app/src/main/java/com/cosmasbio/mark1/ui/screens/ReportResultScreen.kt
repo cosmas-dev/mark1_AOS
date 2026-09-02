@@ -29,7 +29,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.material3.Icon
@@ -79,7 +79,8 @@ fun ReportResultScreen(
     ) {
         Column(Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
             ReportHeader(onBack)
-            Text("Jan 23, 2025, 4:55 PM", color = Color(0xFF7D8589), fontSize = 12.sp)
+            // Text("Jan 23, 2025, 4:55 PM", color = Color(0xFF7D8589), fontSize = 12.sp)
+            Text("2026월 9월 3일", color = Color(0xFF7D8589), fontSize = 12.sp)
             Spacer(Modifier.height(5.dp))
 //            Text("COSMAS Report", color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Text("고스마님의 보고서", color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -100,7 +101,7 @@ fun ReportResultScreen(
 private fun ReportHeader(onBack: () -> Unit) {
     Box(Modifier.fillMaxWidth().height(74.dp)) {
         CircleAction(Modifier.align(Alignment.CenterStart), onBack) {
-            Icon(Icons.Rounded.ArrowBack, "Back", modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.ChevronLeft, "뒤로", modifier = Modifier.size(26.dp))
         }
         // Text("Result", Modifier.align(Alignment.Center), fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Text("검사 결과", Modifier.align(Alignment.Center), fontSize = 17.sp, fontWeight = FontWeight.Bold)
@@ -161,7 +162,7 @@ private fun ReportSummary(captureResult: CaptureResult?, onSaveAndAct: () -> Uni
             )
         }
 
-        CaptureDebugSection(captureResult)
+        // CaptureDebugSection(captureResult)
     }
 }
 
@@ -234,7 +235,7 @@ private fun DebugValue(label: String, value: String) {
 @Composable
 private fun ResultCard(initial: String, name: String, value: String, unit: String, negative: Boolean) {
     val fontScale = LocalDensity.current.fontScale
-    val initialSize = (34f / fontScale).sp
+    val initialSize = (30f / fontScale).sp
     val nameSize = (18f / fontScale).sp
     val valueSize = (36f / fontScale).sp
     val unitSize = (9f / fontScale).sp

@@ -194,7 +194,7 @@ private fun CompleteBottomActions(
 
         Spacer(Modifier.height(14.dp))
         Row(
-            modifier = Modifier.clickable { /* TODO: 관리자 시스템 연동 */ },
+            modifier = Modifier.clickable(onClick = rememberOpenAdminConsole()),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(

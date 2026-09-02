@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,13 +41,14 @@ import androidx.compose.ui.unit.sp
 import com.cosmasbio.mark1.R
 import kotlinx.coroutines.delay
 
-private val CosmasBlue = Color(0xFF4360C5)
-
 /** 로그인 버튼이 나타나기까지의 대기 시간. */
 private const val LOGIN_REVEAL_DELAY_MS = 3_000L
 
 /** intro.png 원본 비율(1646 x 2928). 전체 너비로 깔기 위해 사용한다. */
 private const val INTRO_ASPECT_RATIO = 1646f / 2928f
+
+/** 경찰청 + COSMAS 합본 로고 비율(732 x 900). */
+private const val INTRO_LOGO_ASPECT_RATIO = 732f / 900f
 
 /** 제품 사진을 아래로 내리는 양. 값을 키우면 로고와의 간격이 넓어진다. */
 private val INTRO_DROP = 80.dp
@@ -92,12 +94,13 @@ fun IntroScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(56.dp))
-            CosmasWordmark()
-            Spacer(Modifier.height(16.dp))
+            // 경찰청 + COSMAS 가 하나로 합쳐진 로고 이미지.
             Image(
-                painter = painterResource(R.drawable.korean_national_police_agency_logo),
-                contentDescription = "경찰청",
-                modifier = Modifier.size(148.dp),
+                painter = painterResource(R.drawable.intro_police_cosmas),
+                contentDescription = "경찰청 · COSMAS",
+                modifier = Modifier
+                    .width(176.dp)
+                    .aspectRatio(INTRO_LOGO_ASPECT_RATIO),
                 contentScale = ContentScale.Fit,
             )
         }
@@ -114,37 +117,6 @@ fun IntroScreen(
         ) {
             LoginButton(onClick = onLogin)
         }
-    }
-}
-
-/**
- * "COSMAS" 워드마크. 가운데 A 는 별도 로고 이미지(intro_cosmas.png)를 사용한다.
- */
-@Composable
-private fun CosmasWordmark() {
-    val fontSize = 30.sp
-
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = "COSM",
-            color = CosmasBlue,
-            fontSize = fontSize,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = 1.sp,
-        )
-        Image(
-            painter = painterResource(R.drawable.intro_cosmas),
-            contentDescription = "A",
-            modifier = Modifier.height(21.dp),
-            contentScale = ContentScale.Fit,
-        )
-        Text(
-            text = "S",
-            color = CosmasBlue,
-            fontSize = fontSize,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = 1.sp,
-        )
     }
 }
 

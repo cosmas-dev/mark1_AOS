@@ -61,6 +61,8 @@ fun MenuScreen(
     // 아직 저장소와 연결되지 않은 화면 전용 상태.
     var saveHistory by rememberSaveable { mutableStateOf(true) }
 
+    val openAdminConsole = rememberOpenAdminConsole()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -107,7 +109,7 @@ fun MenuScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 26.dp)
-                .clickable { /* TODO: 관리자 시스템 연동 */ },
+                .clickable(onClick = openAdminConsole),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {

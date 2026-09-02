@@ -17,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cosmasbio.mark1.model.PersonInfo
+import kotlinx.coroutines.launch
 import com.cosmasbio.mark1.ui.screens.AddDiagnosisDetailsScreen
 import com.cosmasbio.mark1.ui.screens.AppInitScreen
 import com.cosmasbio.mark1.ui.screens.GrayScaleResultScreen
@@ -30,6 +31,7 @@ import com.cosmasbio.mark1.ui.screens.AnalysisProgressScreen
 import com.cosmasbio.mark1.ui.screens.ReportResultScreen
 import com.cosmasbio.mark1.ui.screens.IntroScreen
 import com.cosmasbio.mark1.ui.screens.LoginScreen
+import com.cosmasbio.mark1.ui.screens.rememberBiometricLoginController
 import com.cosmasbio.mark1.ui.screens.MenuScreen
 import com.cosmasbio.mark1.ui.screens.NotificationsScreen
 import com.cosmasbio.mark1.ui.screens.PostTestActionScreen
@@ -75,16 +77,28 @@ fun Mark1App(
 
             composable("login") {
                 val loginState by viewModel.loginState.collectAsState()
+                val biometric = rememberBiometricLoginController()
 
                 LoginScreen(
                     uiState = loginState,
                     onBack = { navController.popBackStack() },
                     onClearError = viewModel::clearLoginError,
-                    onSubmit = { email, password ->
+                    onShowMessage = { message ->
+                        scope.launch { snackbarHostState.showSnackbar(message) }
+                    },
+                    onSubmit = { email, password, saveBiometric ->
                         viewModel.login(email, password) {
-                            navController.navigate("home") {
-                                popUpTo("intro") { inclusive = true }
-                                launchSingleTop = true
+                            val goHome = {
+                                navController.navigate("home") {
+                                    popUpTo("intro") { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            // 비밀번호가 맞는 것을 확인한 뒤에만 생체인증으로 잠가 저장한다.
+                            if (saveBiometric) {
+                                biometric.save(email, password) { goHome() }
+                            } else {
+                                goHome()
                             }
                         }
                     },

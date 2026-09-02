@@ -2,4 +2,17 @@
 <resources>
 
     <style name="Theme.Mark1_native" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!--
+        앱 시작 화면.
+        IntroScreen 이 흰 배경이라 스플래시도 같은 흰색으로 맞춰서,
+        스플래시 -> 인트로 전환에 색이 튀지 않게 한다.
+        아이콘은 앱 아이콘의 D 글자만 쓴다(배경 그라데이션 없이 흰 바탕에 바로 올림).
+    -->
+    <style name="Theme.Mark1.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Mark1_native</item>
+    </style>
+
 </resources>
