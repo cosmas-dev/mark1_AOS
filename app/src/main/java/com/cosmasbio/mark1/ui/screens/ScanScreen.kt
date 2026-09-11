@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -106,11 +107,9 @@ fun ScanScreen(
 
             Text(
                 text = if (scanComplete) {
-                    // "Scan complete Your\nanalysis is ready to begin"
-                    "스캔 완료\n분석할 준비가 되었습니다."
+                    stringResource(R.string.scan_result_title)
                 } else {
-                    // "Please wait\nwhile we scan your test"
-                    "키트를 스캔하고 있습니다."
+                    stringResource(R.string.scan_scanning_title)
                 },
                 color = ScanInk,
                 fontSize = 24.sp,
@@ -120,7 +119,7 @@ fun ScanScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = if (scanComplete) "" else "최대 1분 정도 소요될 수 있습니다.", // "This may take up to 1 minutes",
+                text = if (scanComplete) "" else stringResource(R.string.scan_time_estimate),
                 color = ScanInk,
                 fontSize = 18.sp,
             )
@@ -136,7 +135,7 @@ fun ScanScreen(
             Spacer(Modifier.height(30.dp))
 
             Text(
-                text = if (scanComplete) "스캔 완료" else "스캔 중...",
+                text = if (scanComplete) stringResource(R.string.scan_status_complete) else stringResource(R.string.scan_status_scanning),
                 color = Color(0xFF7D8589),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
@@ -206,7 +205,7 @@ private fun AnimatedKit(
 
         Image(
             painter = painterResource(R.drawable.kit),
-            contentDescription = "Diagnostic test kit",
+            contentDescription = stringResource(R.string.scan_kit_content_description),
             contentScale = ContentScale.Fit,
             modifier = Modifier
                 .height(325.dp)
@@ -239,8 +238,7 @@ private fun AnimatedKit(
 private fun ScanHeader(onClose: () -> Unit) {
     Box(Modifier.fillMaxWidth().height(72.dp)) {
         Text(
-            // text = "Diagnose",
-            text = "진단",
+            text = stringResource(R.string.scan_header_title),
             modifier = Modifier.align(Alignment.Center),
             color = Color.Black,
             fontSize = 20.sp,
@@ -257,7 +255,7 @@ private fun ScanHeader(onClose: () -> Unit) {
                 .clickable(onClick = onClose),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.Close, "Close", Modifier.size(28.dp), Color.Black)
+            Icon(Icons.Rounded.Close, stringResource(R.string.scan_close_content_description), Modifier.size(28.dp), Color.Black)
         }
     }
 }
@@ -286,7 +284,7 @@ private fun ScanActions(
                 .clickable(onClick = onCancel),
             contentAlignment = Alignment.Center,
         ) {
-            Text("취소", color = ScanInk, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.scan_cancel_button), color = ScanInk, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         Box(
             modifier = Modifier
@@ -298,8 +296,7 @@ private fun ScanActions(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                // "Continue",
-                "분석 시작",
+                stringResource(R.string.scan_continue_button),
                 color = if (enabled) Color.White else Color.White.copy(alpha = .38f),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,

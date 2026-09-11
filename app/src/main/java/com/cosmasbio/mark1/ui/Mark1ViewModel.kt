@@ -9,6 +9,7 @@ import com.cosmasbio.mark1.analyzer.IvdAnalyzerRepository
 import com.cosmasbio.mark1.data.device.CosmasWifiConnector
 import com.cosmasbio.mark1.data.device.Mark1DeviceManager
 import com.cosmasbio.mark1.data.local.Mark1Database
+import com.cosmasbio.mark1.data.local.ReaderPreferences
 import com.cosmasbio.mark1.data.repository.AuthRepository
 import com.cosmasbio.mark1.data.repository.ExamRepository
 import com.cosmasbio.mark1.data.repository.LoginResult
@@ -17,9 +18,12 @@ import com.cosmasbio.mark1.iot.GistFlutterCaptureClient
 import com.cosmasbio.mark1.model.AppUiState
 import com.cosmasbio.mark1.model.CaptureResult
 import com.cosmasbio.mark1.model.CaptureUiState
+import com.cosmasbio.mark1.model.ExamHistoryRow
 import com.cosmasbio.mark1.model.LoginUiState
+import com.cosmasbio.mark1.model.PersonEditTarget
 import com.cosmasbio.mark1.model.PersonInfo
 import com.cosmasbio.mark1.model.TestDraft
+import com.cosmasbio.mark1.R
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -60,10 +64,12 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
     private var captureJob: Job? = null
 
     private val _loginState = MutableStateFlow(LoginUiState())
+    private val _editTarget = MutableStateFlow<PersonEditTarget?>(null)
 
     val events = _events.asSharedFlow()
     val captureResults = _captureResults.asSharedFlow()
     val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()
+    val editTarget: StateFlow<PersonEditTarget?> = _editTarget.asStateFlow()
 
     val uiState: StateFlow<AppUiState> =
         combine(loading, deviceManager.status, draft, captureState, latestCaptureResult) {
@@ -83,6 +89,13 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = AppUiState()
+        )
+
+    val examHistory: StateFlow<List<ExamHistoryRow>> = examRepository.examHistory()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList(),
         )
 
     init {
@@ -105,7 +118,9 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
             val result = runCatching { authRepository.login(email, password) }
                 .getOrElse { error ->
                     Log.e("Mark1ViewModel", "로그인 처리 실패", error)
-                    _loginState.value = LoginUiState(error = "로그인 중 문제가 발생했습니다.")
+                    _loginState.value = LoginUiState(
+                        error = getApplication<Application>().getString(R.string.vm_login_generic_error)
+                    )
                     return@launch
                 }
 
@@ -117,7 +132,9 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
 
                 LoginResult.InvalidCredentials -> {
                     _loginState.value =
-                        LoginUiState(error = "이메일 또는 비밀번호가 올바르지 않습니다.")
+                        LoginUiState(
+                            error = getApplication<Application>().getString(R.string.vm_login_invalid_credentials)
+                        )
                 }
             }
         }
@@ -147,29 +164,21 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
 
                          if (!socketConnected) {
                              _events.emit(
-                                 "COSMAS Wi-Fi에는 연결됐지만 리더기 소켓 연결에 실패했습니다."
+                                 getApplication<Application>().getString(R.string.vm_wifi_connect_failed_socket)
                              )
                              return@launch
                          }
 
-                         _events.emit("COSMAS 리더기 연결 완료")
+                         _events.emit(getApplication<Application>().getString(R.string.vm_reader_connected))
                          onConnected()
 
                          // 장비 모델 조회는 연결 성공과 분리
-                         launch {
-                             runCatching {
- //                                deviceManager.loadDeviceInfo()
-                             }.onFailure { error ->
-                                 Log.w(
-                                     "Mark1ViewModel",
-                                     "DEV_INFO 응답을 받지 못했습니다.",
-                                     error
-                                 )
-                             }
-                         }
+                         launch { refreshDeviceInfo() }
                      } catch (e: Exception) {
                          Log.e("Mark1ViewModel", "리더기 연결 실패", e)
-                         _events.emit(e.message ?: "리더기 연결에 실패했습니다.")
+                         _events.emit(
+                             e.message ?: getApplication<Application>().getString(R.string.vm_reader_connect_failed)
+                         )
                      } finally {
                          isCosmasConnectionProcessing = false
                      }
@@ -180,7 +189,7 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
                 isCosmasConnectionProcessing = false
 
                 viewModelScope.launch {
-                    _events.emit("COSMAS Wi-Fi를 찾을 수 없습니다.")
+                    _events.emit(getApplication<Application>().getString(R.string.vm_wifi_not_found))
                 }
             },
 
@@ -192,14 +201,21 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
                     deviceManager.disconnect()
                     deviceManager.clearNetwork()
 
-                    _events.emit("COSMAS Wi-Fi 연결이 끊어졌습니다.")
+                    _events.emit(getApplication<Application>().getString(R.string.vm_wifi_disconnected))
                 }
             },
         )
     }
 
     fun restoreKnownDeviceConnection() {
-        if (deviceManager.status.value.socketConnected || isCosmasConnectionProcessing) return
+        if (isCosmasConnectionProcessing) return
+
+        // 소켓이 이미 연결돼 있다면 재연결은 필요 없지만, 화면을 다시 열 때마다
+        // 장비 정보(이름 등)는 최신값으로 다시 받아온다.
+        if (deviceManager.status.value.socketConnected) {
+            viewModelScope.launch { refreshDeviceInfo() }
+            return
+        }
 
         // 앱 세션 내 연결 기록이 없어도, 시스템이 이미 COSMAS Wi-Fi에 붙어 있다면
         // 사용자가 Connect를 다시 누르지 않도록 바로 연결을 시도한다.
@@ -213,6 +229,20 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
                 .onFailure { error ->
                     Log.w("Mark1ViewModel", "기존 리더기 연결 복원 실패", error)
                 }
+        }
+    }
+
+    private suspend fun refreshDeviceInfo() {
+        runCatching {
+            deviceManager.loadDeviceInfo()
+        }.onSuccess { info ->
+            Log.d("Mark1ViewModel", "DEV_INFO 조회 결과: $info")
+            // 기기가 알려준 이름을 리더기 이름으로 그대로 반영한다.
+            if (info != null && info.name.isNotBlank()) {
+                ReaderPreferences.setReaderName(getApplication(), info.name)
+            }
+        }.onFailure { error ->
+            Log.w("Mark1ViewModel", "DEV_INFO 응답을 받지 못했습니다.", error)
         }
     }
 
@@ -239,9 +269,9 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val ok = deviceManager.toggleBacklight()
-                if (!ok) _events.emit("백라이트 제어 실패")
+                if (!ok) _events.emit(getApplication<Application>().getString(R.string.vm_backlight_control_failed))
             } catch (e: Exception) {
-                _events.emit(e.message ?: "백라이트 제어 실패")
+                _events.emit(e.message ?: getApplication<Application>().getString(R.string.vm_backlight_control_failed))
             }
 
         }
@@ -251,9 +281,10 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val ok = deviceManager.captureImage()
-                _events.emit(if (ok) "촬영 명령을 전송했어요." else "촬영 실패")
+                val app = getApplication<Application>()
+                _events.emit(if (ok) app.getString(R.string.vm_capture_command_sent) else app.getString(R.string.vm_capture_failed))
             } catch (e: Exception) {
-                _events.emit(e.message ?: "촬영 실패")
+                _events.emit(e.message ?: getApplication<Application>().getString(R.string.vm_capture_failed))
             }
         }
     }
@@ -262,9 +293,13 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val temp = deviceManager.readTemperature()
-                _events.emit(if (!temp.isNullOrBlank()) "현재 온도 ${temp}℃" else "온도 값을 받지 못했어요.")
+                val app = getApplication<Application>()
+                _events.emit(
+                    if (!temp.isNullOrBlank()) app.getString(R.string.vm_temperature_current, temp)
+                    else app.getString(R.string.vm_temperature_missing)
+                )
             } catch (e: Exception) {
-                _events.emit(e.message ?: "온도 확인 실패")
+                _events.emit(e.message ?: getApplication<Application>().getString(R.string.vm_temperature_check_failed))
             }
         }
     }
@@ -273,9 +308,10 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val ok = deviceManager.sendSetting(groupCode, key, value)
-                _events.emit(if (ok) "$key 설정을 보냈어요." else "설정 전송 실패")
+                val app = getApplication<Application>()
+                _events.emit(if (ok) app.getString(R.string.vm_setting_sent, key) else app.getString(R.string.vm_setting_send_failed))
             } catch (e: Exception) {
-                _events.emit(e.message ?: "설정 전송 실패")
+                _events.emit(e.message ?: getApplication<Application>().getString(R.string.vm_setting_send_failed))
             }
         }
     }
@@ -375,9 +411,9 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
                     capturing = false,
                     analyzing = false,
                     remainingSeconds = 0,
-                    error = e.message ?: "촬영/분석 실패",
+                    error = e.message ?: getApplication<Application>().getString(R.string.vm_capture_analysis_failed),
                 )
-                _events.emit(e.message ?: "촬영/분석 실패")
+                _events.emit(e.message ?: getApplication<Application>().getString(R.string.vm_capture_analysis_failed))
             }
         }
     }
@@ -391,6 +427,35 @@ class Mark1ViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearCaptureError() {
         captureState.value = captureState.value.copy(error = null)
+    }
+
+    /** Diagnosis Report에서 과거 검사 기록을 선택했을 때 그 결과를 다시 불러온다. */
+    suspend fun loadCaptureResult(captureId: String): CaptureResult? =
+        examRepository.captureResultOf(captureId)
+
+    suspend fun loadPersonInfo(personId: String?): PersonInfo? =
+        examRepository.personInfo(personId)
+
+    /** 대상자 정보 수정 화면으로 넘어가기 전에 편집 대상을 기억해둔다. */
+    fun setEditTarget(personId: String?, captureId: String?, info: PersonInfo) {
+        _editTarget.value = PersonEditTarget(personId, captureId, info)
+    }
+
+    fun clearEditTarget() {
+        _editTarget.value = null
+    }
+
+    /**
+     * 대상자 정보를 저장한다. captureId가 있으면(검사 이력에서 연 경우) 저장/매칭된 인물로
+     * 그 촬영을 다시 연결해서, 처음에 personId가 비어 있던 촬영도 다음에 열면 방금 저장한
+     * 값이 그대로 보이게 한다.
+     */
+    suspend fun savePersonInfo(info: PersonInfo, personId: String?, captureId: String?): String? {
+        val resolvedPersonId = examRepository.savePersonInfo(info, personId)
+        if (captureId != null && resolvedPersonId != null && resolvedPersonId != personId) {
+            examRepository.relinkCapturePerson(captureId, resolvedPersonId)
+        }
+        return resolvedPersonId
     }
 
     override fun onCleared() {

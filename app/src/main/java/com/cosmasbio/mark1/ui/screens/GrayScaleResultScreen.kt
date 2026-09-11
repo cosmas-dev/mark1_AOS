@@ -159,7 +159,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.model.AnalysisReport
 import java.io.File
 import java.io.FileInputStream
@@ -182,15 +184,18 @@ fun GrayScaleResultScreen(
     fun saveImage() {
         val result = saveCaptureToGallery(context, imagePath)
         saveMessage = result.fold(
-            onSuccess = { "갤러리의 Pictures/COSMAS에 저장했습니다." },
-            onFailure = { error -> "갤러리 저장 실패: ${error.message ?: "알 수 없는 오류"}" },
+            onSuccess = { context.getString(R.string.gray_result_save_success) },
+            onFailure = { error ->
+                val errorMessage = error.message ?: context.getString(R.string.gray_result_unknown_error)
+                context.getString(R.string.gray_result_save_failure, errorMessage)
+            },
         )
     }
 
     val storagePermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) saveImage() else saveMessage = "갤러리 저장 권한이 필요합니다."
+        if (granted) saveImage() else saveMessage = context.getString(R.string.gray_result_permission_required)
     }
 
     val croppedBitmap = remember(imagePath) {
@@ -207,8 +212,8 @@ fun GrayScaleResultScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("촬영 결과") },
-                navigationIcon = { TextButton(onClick = onBackHome) { Text("홈") } },
+                title = { Text(stringResource(R.string.gray_result_title)) },
+                navigationIcon = { TextButton(onClick = onBackHome) { Text(stringResource(R.string.gray_result_home_button)) } },
             )
         }
     ) { innerPadding ->
@@ -228,12 +233,12 @@ fun GrayScaleResultScreen(
                     if (croppedBitmap != null) {
                         Image(
                             bitmap = croppedBitmap.asImageBitmap(),
-                            contentDescription = "cropped captured image",
+                            contentDescription = stringResource(R.string.gray_result_cropped_image_content_description),
                             modifier = Modifier.fillMaxWidth(),
                             contentScale = ContentScale.FillWidth
                         )
                     } else {
-                        Text("이미지를 표시할 수 없습니다.")
+                        Text(stringResource(R.string.gray_result_image_unavailable))
                     }
                 }
             }
@@ -243,10 +248,10 @@ fun GrayScaleResultScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("이름: $name")
-                    Text("타입: $type")
-                    Text("설명: ${if (info.isBlank()) "-" else info}")
-                    Text("저장 경로: $imagePath")
+                    Text(stringResource(R.string.gray_result_name_label, name))
+                    Text(stringResource(R.string.gray_result_type_label, type))
+                    Text(stringResource(R.string.gray_result_info_label, if (info.isBlank()) "-" else info))
+                    Text(stringResource(R.string.gray_result_path_label, imagePath))
                 }
             }
 
@@ -255,19 +260,29 @@ fun GrayScaleResultScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("분석 결과")
+                    Text(stringResource(R.string.gray_result_analysis_heading))
                     if (analysis == null) {
-                        Text("분석 결과가 없습니다.")
+                        Text(stringResource(R.string.gray_result_no_analysis))
                     } else {
                         // Text("채널: ${analysis.channelName}")
                         // Text("ROI: x=${analysis.roiX}, y=${analysis.roiY}, w=${analysis.roiW}, h=${analysis.roiH}")
                         // Text("Noise Sigma: ${analysis.noiseSigma}")
                         // Text("C 위치: ${analysis.cPosition ?: "-"}")
-                        Text("C SNR: ${analysis.cSnr ?: "-"}")
+                        Text(stringResource(R.string.gray_result_c_snr_label, analysis.cSnr?.toString() ?: "-"))
                         // Text("T 위치: ${analysis.tPosition ?: "-"}")
-                        Text("T SNR: ${analysis.tSnr ?: "-"}")
-                        Text("T 검출: ${if (analysis.tDetected) "검출" else "미검출"}")
-                        Text("약한 T: ${if (analysis.tWeak) "예" else "아니오"}")
+                        Text(stringResource(R.string.gray_result_t_snr_label, analysis.tSnr?.toString() ?: "-"))
+                        Text(
+                            stringResource(
+                                R.string.gray_result_t_detected_label,
+                                if (analysis.tDetected) stringResource(R.string.gray_result_detected) else stringResource(R.string.gray_result_not_detected),
+                            )
+                        )
+                        Text(
+                            stringResource(
+                                R.string.gray_result_t_weak_label,
+                                if (analysis.tWeak) stringResource(R.string.gray_result_yes) else stringResource(R.string.gray_result_no),
+                            )
+                        )
                         // Text("H1 Split 유효: ${if (analysis.h1SplitValid) "예" else "아니오"}")
                         // Text("Peak Separation(px): ${analysis.peakSeparationPx}")
                         // Text("Peak 개수: ${analysis.numPeaks}")
@@ -291,16 +306,16 @@ fun GrayScaleResultScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("이미지를 갤러리에 저장")
+                Text(stringResource(R.string.gray_result_save_to_gallery_button))
             }
 
             saveMessage?.let { message -> Text(message) }
 
             Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) {
-                Text("다시 촬영하기")
+                Text(stringResource(R.string.gray_result_retry_button))
             }
             Button(onClick = onBackHome, modifier = Modifier.fillMaxWidth()) {
-                Text("홈으로")
+                Text(stringResource(R.string.gray_result_back_home_button))
             }
         }
     }
@@ -310,7 +325,7 @@ private fun saveCaptureToGallery(context: Context, imagePath: String): Result<Un
     runCatching {
         val source = File(imagePath)
         require(source.exists() && source.length() > 0L) {
-            "저장할 이미지 파일을 찾을 수 없습니다."
+            context.getString(R.string.gray_result_file_not_found)
         }
 
         val isPng = source.extension.equals("png", ignoreCase = true)
@@ -330,12 +345,12 @@ private fun saveCaptureToGallery(context: Context, imagePath: String): Result<Un
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
             val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-                ?: error("갤러리 저장 위치를 만들 수 없습니다.")
+                ?: error(context.getString(R.string.gray_result_cannot_create_location))
 
             try {
                 resolver.openOutputStream(uri)?.use { output ->
                     FileInputStream(source).use { input -> input.copyTo(output) }
-                } ?: error("갤러리 파일을 열 수 없습니다.")
+                } ?: error(context.getString(R.string.gray_result_cannot_open_file))
 
                 values.clear()
                 values.put(MediaStore.Images.Media.IS_PENDING, 0)

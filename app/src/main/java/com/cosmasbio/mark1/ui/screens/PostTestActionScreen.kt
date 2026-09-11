@@ -47,16 +47,32 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cosmasbio.mark1.R
 
 /** 검사 후 조치 유형. */
-enum class PostTestAction(val title: String, val description: String) {
-    FieldCheck("현장 확인", "현장에서 결과를 확인하고 안내"),
-    Retest("추가 검사", "재검 또는 추가 항목 검사"),
-    Handover("인계 준비", "인계서 작성 및 대상자 이송 준비"),
+enum class PostTestAction {
+    FieldCheck,
+    Retest,
+    Handover,
+}
+
+@Composable
+private fun PostTestAction.displayTitle(): String = when (this) {
+    PostTestAction.FieldCheck -> stringResource(R.string.post_test_action_type_field_check_title)
+    PostTestAction.Retest -> stringResource(R.string.post_test_action_type_retest_title)
+    PostTestAction.Handover -> stringResource(R.string.post_test_action_type_handover_title)
+}
+
+@Composable
+private fun PostTestAction.displayDescription(): String = when (this) {
+    PostTestAction.FieldCheck -> stringResource(R.string.post_test_action_type_field_check_description)
+    PostTestAction.Retest -> stringResource(R.string.post_test_action_type_retest_description)
+    PostTestAction.Handover -> stringResource(R.string.post_test_action_type_handover_description)
 }
 
 private const val MEMO_MAX_LENGTH = 200
@@ -94,7 +110,7 @@ fun PostTestActionScreen(
                 })
             },
     ) {
-        ActionHeader(title = "검사 후 조치", onBack = onBack)
+        ActionHeader(title = stringResource(R.string.post_test_action_header_title), onBack = onBack)
 
         Column(
             modifier = Modifier
@@ -103,18 +119,18 @@ fun PostTestActionScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            ActionSectionTitle("검사 결과 요약")
+            ActionSectionTitle(stringResource(R.string.post_test_action_result_summary_title))
             ResultSummaryCard(rows = sampleTestResultRows)
 
             Spacer(Modifier.height(6.dp))
-            ActionSectionTitle("조치 유형")
+            ActionSectionTitle(stringResource(R.string.post_test_action_type_section_title))
             ActionTypeCard(
                 selected = selectedAction,
                 onSelect = { selectedAction = it },
             )
 
             Spacer(Modifier.height(6.dp))
-            ActionSectionTitle("현장 메모")
+            ActionSectionTitle(stringResource(R.string.post_test_action_memo_section_title))
             MemoCard(
                 memo = memo,
                 onMemoChange = { if (it.length <= MEMO_MAX_LENGTH) memo = it },
@@ -147,7 +163,7 @@ internal fun ActionHeader(
         ) {
             Icon(
                 imageVector = Icons.Rounded.ChevronLeft,
-                contentDescription = "뒤로",
+                contentDescription = stringResource(R.string.post_test_action_back),
                 tint = ActionInk,
                 modifier = Modifier.size(26.dp),
             )
@@ -168,7 +184,7 @@ internal fun ActionHeader(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.IosShare,
-                    contentDescription = "내보내기",
+                    contentDescription = stringResource(R.string.post_test_action_export),
                     tint = ActionInk,
                     modifier = Modifier.size(20.dp),
                 )
@@ -245,14 +261,14 @@ private fun ActionTypeRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = action.title,
+                text = action.displayTitle(),
                 color = if (selected) ActionInk else Color(0xFF5C6369),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(3.dp))
             Text(
-                text = action.description,
+                text = action.displayDescription(),
                 color = ActionSubText,
                 fontSize = 12.sp,
             )
@@ -297,7 +313,7 @@ private fun MemoCard(memo: String, onMemoChange: (String) -> Unit) {
         Box(modifier = Modifier.fillMaxWidth()) {
             if (memo.isEmpty()) {
                 Text(
-                    text = "현장 상황과 대상자 진술을 입력하세요.",
+                    text = stringResource(R.string.post_test_action_memo_placeholder),
                     color = Color(0xFFB0B6BB),
                     fontSize = 14.sp,
                     lineHeight = 21.sp,
@@ -347,7 +363,7 @@ private fun SaveRecordButton(onClick: () -> Unit) {
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            text = "검사 기록 저장",
+            text = stringResource(R.string.post_test_action_save_record_button),
             color = Color.White,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
@@ -373,7 +389,7 @@ internal fun ActionBottomBar(onCancel: () -> Unit, onRestart: () -> Unit) {
                 .clickable(onClick = onCancel),
             contentAlignment = Alignment.Center,
         ) {
-            Text("취소", color = ActionInk, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.post_test_action_cancel), color = ActionInk, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
         Box(
             modifier = Modifier
@@ -384,7 +400,7 @@ internal fun ActionBottomBar(onCancel: () -> Unit, onRestart: () -> Unit) {
                 .clickable(onClick = onRestart),
             contentAlignment = Alignment.Center,
         ) {
-            Text("다시 검사", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.post_test_action_retry), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -18,15 +18,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Menu
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -53,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.model.DeviceStatus
 import androidx.compose.animation.core.LinearEasing
@@ -67,11 +66,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.scale
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 
 private val HomeTop = Color(0xFFE8F0F5)
 private val HomeBottom = Color(0xFFC5D1D9)
 private val MutedText = Color(0xFF858A8E)
-private val SelectedNav = Color(0xFFB2C1CB)
 
 @Composable
 fun HomeScreen(
@@ -84,10 +84,21 @@ fun HomeScreen(
     onStartDiagnosis: () -> Unit,
     onNotificationClick: () -> Unit,
     onMenuClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onDocumentClick: () -> Unit,
+    onChecklistClick: () -> Unit,
 ) {
     var showSettingsDialog by remember { mutableStateOf(false) }
     var selectedSetting by remember { mutableStateOf("FOCUS") }
     var settingValue by remember { mutableStateOf("") }
+
+    // 디자인(Figma) 기준 화면 크기는 360x800dp. 실제 화면 너비를 그 기준과
+    // 비교한 비율만큼 주요 크기를 함께 조절해서, 기기 화면 크기가 달라져도
+    // 디자인과 같은 비율로 보이게 한다.
+    // (BoxWithConstraints는 내부적으로 SubcomposeLayout을 쓰는데, 이게 상단
+    // 메뉴/알림 버튼의 클릭 가능 영역을 화면에 보이는 위치와 어긋나게 만드는
+    // 문제가 있어서, 대신 LocalConfiguration으로 화면 너비를 구한다.)
+    val scale = LocalConfiguration.current.screenWidthDp.dp / 360.dp
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -104,51 +115,63 @@ fun HomeScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            TopActions(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 18.dp),
-                onMenuClick = onMenuClick,
-                onNotificationClick = onNotificationClick,
-            )
-
+            // TopActions(메뉴/알림 버튼)는 스크롤 가능한 Column보다 나중에(Box의 더 위 레이어에)
+            // 선언해야 한다. 먼저 선언하면 그 위에 겹쳐 그려지는 스크롤 영역이 같은 자리의
+            // 터치를 먼저 가로채서 버튼이 눌리지 않는 문제가 있었다.
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 18.dp),
+                    .padding(horizontal = 18.dp * scale),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(Modifier.height(137.dp))
-
-                Text(
-//                    text = "Hello,\nMr Cosmas",
-                    text = "반갑습니다, \n고스마님",
-                    color = Color.Black,
-                    fontSize = 34.sp,
-                    lineHeight = 41.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                )
-
-                Spacer(Modifier.height(30.dp))
-
-                Box(
-                    modifier = Modifier .size(310.dp),
-                    contentAlignment = Alignment.Center,
+                // 화면이 작아서 아래 내용(마지막 업데이트 + 하단 내비게이션)이
+                // 들어갈 공간이 부족해지면, 이 가운데 영역만 스크롤되고
+                // 하단 내비게이션은 항상 화면에 보이도록 고정한다.
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    WhiteRingsHalo(modifier = Modifier.fillMaxSize())
+                    // Figma 실측값(360x800 기준): 인사말 텍스트 Top 135dp.
+                    // 이 여백은 scale을 곱하지 않는다 — halo/버튼 크기만 정확히 비율대로
+                    // 키우고, 여백까지 같이 키우면 화면이 좁고 높이가 빠듯한 기기에서
+                    // 이 영역이 화면 안에 다 안 들어가 스크롤이 생겨버린다.
+                    Spacer(Modifier.height(135.dp))
 
-                    StartButton(
-                        onClick = onStartDiagnosis,
+                    Text(
+                        text = stringResource(R.string.home_greeting, "고스마"),
+                        color = Color.Black,
+                        fontSize = 34.sp,
+                        lineHeight = 41.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
                     )
+
+                    // Figma 실측값: 인사말 텍스트 하단(135+86=221)에서 halo 상단(252)까지 31dp.
+                    Spacer(Modifier.height(31.dp))
+
+                    Box(
+                        // Figma 실측값: halo(Vector) 360x360.
+                        modifier = Modifier.size(360.dp * scale),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        WhiteRingsHalo(modifier = Modifier.fillMaxSize())
+
+                        StartButton(
+                            onClick = onStartDiagnosis,
+                            // Figma 실측값: START 버튼(Frame 2085668174) 200x200.
+                            size = 200.dp * scale,
+                        )
+                    }
                 }
 
-                Spacer(Modifier.weight(1f))
+                // Figma 실측값: halo 하단(252+360=612)에서 "Last updated" 영역 Top(622)까지 10dp.
+                Spacer(Modifier.height(10.dp * scale))
 
                 Text(
-//                    text = "Last updated\n23 min ago",
-                    text = "마지막 업데이트\n23분 전",
+                    text = stringResource(R.string.home_last_updated),
                     color = MutedText,
                     fontSize = 16.sp,
                     lineHeight = 20.sp,
@@ -156,15 +179,35 @@ fun HomeScreen(
                     fontWeight = FontWeight.Normal,
                 )
 
-                Spacer(Modifier.height(36.dp))
+                // Figma 실측값: "Last updated" 영역 하단(622+60=682)에서 하단 내비게이션 Top(695)까지 13dp.
+                Spacer(Modifier.height(13.dp * scale))
                 BottomNavigation(
                     onHomeClick = {},
-                    onChecklistClick = onCapture,
-                    onDocumentClick = onReadTemperature,
-                    onSettingsClick = { showSettingsDialog = true },
+                    onChecklistClick = onChecklistClick,
+                    // 기존 촬영 동작은 길게 눌렀을 때만 실행되도록 남겨둔다.
+                    onChecklistLongClick = onCapture,
+                    onDocumentClick = onDocumentClick,
+                    // 기존 온도 읽기 동작은 길게 눌렀을 때만 실행되도록 남겨둔다.
+                    onDocumentLongClick = onReadTemperature,
+                    onSettingsClick = onSettingsClick,
+                    // 하드웨어 세팅값 다이얼로그는 길게 눌렀을 때만 열리도록 남겨둔다.
+                    onSettingsLongClick = { showSettingsDialog = true },
+                    selected = BottomNavKey.Home,
+                    scale = scale,
+                    // Figma 실측값: 하단 내비게이션(Frame 2085668332) 너비 314dp(좌우 여백 23dp씩).
+                    modifier = Modifier.width(314.dp * scale),
                 )
-                Spacer(Modifier.height(10.dp))
             }
+
+            TopActions(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp * scale, vertical = 18.dp * scale),
+                onMenuClick = onMenuClick,
+                onNotificationClick = onNotificationClick,
+                scale = scale,
+            )
         }
     }
 
@@ -187,6 +230,7 @@ fun HomeScreen(
 private fun StartButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp = 190.dp,
 ) {
     val interactionSource = remember {
         MutableInteractionSource()
@@ -214,7 +258,7 @@ private fun StartButton(
 
     Box(
         modifier = modifier
-            .size(190.dp)
+            .size(size)
             .scale(scale)
             .shadow(
                 elevation = elevation,
@@ -243,7 +287,7 @@ private fun StartButton(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "START",
+            text = stringResource(R.string.home_start_button),
             color = Color.White,
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
@@ -252,41 +296,48 @@ private fun StartButton(
 }
 
 @Composable
-private fun TopActions(
+internal fun TopActions(
     modifier: Modifier = Modifier,
     onMenuClick: () -> Unit,
     onNotificationClick: () -> Unit,
+    scale: Float = 1f,
 ) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    // Row + SpaceBetween로 두 버튼을 배치하면(예전 방식) 클릭 가능 영역이 화면에
+    // 보이는 버튼 위치와 어긋나는 문제가 있어서, 다른 화면들과 동일하게
+    // Box + align으로 배치한다.
+    Box(modifier = modifier) {
         GlassCircleIconButton(
+            modifier = Modifier.align(Alignment.CenterStart),
             onClick = onMenuClick,
-            icon = R.drawable.ic_menu,
-            contentDescription = "메뉴"
+            iconRes = R.drawable.ic_menu,
+            contentDescription = stringResource(R.string.home_menu_content_description),
+            size = 40.dp * scale,
         )
         GlassCircleIconButton(
+            modifier = Modifier.align(Alignment.CenterEnd),
             onClick = onNotificationClick,
-            icon = R.drawable.ic_notification,
-            contentDescription = "알림"
+            iconRes = R.drawable.ic_notification,
+            contentDescription = stringResource(R.string.home_notification_content_description),
+            size = 40.dp * scale,
         )
     }
 }
 
 @Composable
-private fun GlassCircleIconButton(
+internal fun GlassCircleIconButton(
     onClick: () -> Unit,
-    icon: Int,
     contentDescription: String,
     modifier: Modifier = Modifier,
+    iconRes: Int? = null,
+    icon: ImageVector? = null,
+    iconTint: Color = Color.Black,
+    size: androidx.compose.ui.unit.Dp = 40.dp,
 ) {
     val shape = CircleShape
 
     Box(
         modifier = modifier
-            .size(40.dp)
+            .size(size)
             .shadow(
                 elevation = 8.dp,
                 shape = shape,
@@ -311,11 +362,20 @@ private fun GlassCircleIconButton(
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Image(
-            painter = painterResource(id = icon),
-            contentDescription = contentDescription,
-            modifier = Modifier.size(22.dp),
-        )
+        if (iconRes != null) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = contentDescription,
+                modifier = Modifier.size(22.dp),
+            )
+        } else if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = iconTint,
+                modifier = Modifier.size(22.dp),
+            )
+        }
     }
 }
 
@@ -498,53 +558,108 @@ private fun WhiteRingsHalo(
     }
 }
 
+internal enum class BottomNavKey { Home, Checklist, Document, Settings }
+
 @Composable
-private fun BottomNavigation(
+internal fun BottomNavigation(
     onHomeClick: () -> Unit,
     onChecklistClick: () -> Unit,
     onDocumentClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onChecklistLongClick: (() -> Unit)? = null,
+    onDocumentLongClick: (() -> Unit)? = null,
+    onSettingsLongClick: (() -> Unit)? = null,
+    selected: BottomNavKey = BottomNavKey.Home,
+    scale: Float = 1f,
+    modifier: Modifier = Modifier.fillMaxWidth(),
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-             .height(72.dp)
-            .shadow(10.dp, RoundedCornerShape(54.dp))
-            .clip(RoundedCornerShape(54.dp))
+        modifier = modifier
+             .height(72.dp * scale)
+            .shadow(10.dp, RoundedCornerShape(54.dp * scale))
+            .clip(RoundedCornerShape(54.dp * scale))
             .background(Color.White.copy(alpha = 0.39f))
-             .padding(horizontal = 8.dp, vertical = 6.dp),
+             .padding(horizontal = 8.dp * scale, vertical = 6.dp * scale),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        BottomNavItem(Icons.Outlined.Home, "홈", selected = true, onClick = onHomeClick)
-        BottomNavItem(Icons.Outlined.Check, "목록", onClick = onChecklistClick)
-        BottomNavItem(Icons.Outlined.DateRange, "문서", onClick = onDocumentClick)
-        BottomNavItem(Icons.Outlined.Settings, "설정", onClick = onSettingsClick)
+        BottomNavItem(
+            icon = Icons.Outlined.Home,
+            contentDescription = stringResource(R.string.home_nav_home_content_description),
+            selected = selected == BottomNavKey.Home,
+            onClick = onHomeClick,
+            scale = scale,
+        )
+        BottomNavItem(
+            iconRes = R.drawable.checklist,
+            contentDescription = stringResource(R.string.home_nav_checklist_content_description),
+            selected = selected == BottomNavKey.Checklist,
+            onClick = onChecklistClick,
+            onLongClick = onChecklistLongClick,
+            scale = scale,
+        )
+        BottomNavItem(
+            iconRes = R.drawable.report,
+            contentDescription = stringResource(R.string.home_nav_document_content_description),
+            selected = selected == BottomNavKey.Document,
+            onClick = onDocumentClick,
+            onLongClick = onDocumentLongClick,
+            scale = scale,
+        )
+        BottomNavItem(
+            iconRes = R.drawable.settings,
+            contentDescription = stringResource(R.string.home_nav_settings_content_description),
+            selected = selected == BottomNavKey.Settings,
+            onClick = onSettingsClick,
+            onLongClick = onSettingsLongClick,
+            scale = scale,
+        )
     }
 }
 
 @Composable
-private fun BottomNavItem(
-    icon: ImageVector,
+internal fun BottomNavItem(
+    icon: ImageVector? = null,
+    iconRes: Int? = null,
     contentDescription: String,
     selected: Boolean = false,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    scale: Float = 1f,
 ) {
     Box(
         modifier = Modifier
-             .width(76.dp)
-             .height(60.dp)
-            .clip(RoundedCornerShape(44.dp))
-            .background(if (selected) SelectedNav else Color.Transparent)
-            .clickable(onClick = onClick),
+             .width(76.dp * scale)
+             .height(60.dp * scale)
+            .clip(RoundedCornerShape(44.dp * scale))
+            .then(
+                if (onLongClick != null) {
+                    Modifier.pointerInput(onClick, onLongClick) {
+                        detectTapGestures(
+                            onTap = { onClick() },
+                            onLongPress = { onLongClick() },
+                        )
+                    }
+                } else {
+                    Modifier.clickable(onClick = onClick)
+                }
+            ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = Color.Black,
-            modifier = Modifier.size(30.dp),
-        )
+        if (iconRes != null) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = contentDescription,
+                modifier = Modifier.size(28.dp * scale),
+            )
+        } else if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = Color.Black,
+                modifier = Modifier.size(30.dp * scale),
+            )
+        }
     }
 }
 
@@ -561,7 +676,7 @@ private fun SettingValueDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("세팅값 설정") },
+        title = { Text(stringResource(R.string.home_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 options.forEach { option ->
@@ -575,13 +690,13 @@ private fun SettingValueDialog(
                 OutlinedTextField(
                     value = value,
                     onValueChange = onValueChange,
-                    label = { Text("$selectedSetting 값") },
+                    label = { Text(stringResource(R.string.home_setting_value_label, selectedSetting)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("확인") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.home_dialog_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.home_dialog_cancel)) } },
     )
 }

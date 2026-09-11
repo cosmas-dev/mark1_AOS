@@ -25,7 +25,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +41,9 @@ fun NotificationsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // 홈 화면과 같은 비율로 상단 버튼 크기·여백을 맞추기 위한 값 (디자인 기준 360dp).
+    val scale = LocalConfiguration.current.screenWidthDp.dp / 360.dp
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -46,7 +51,7 @@ fun NotificationsScreen(
             .statusBarsPadding()
             .navigationBarsPadding(),
     ) {
-        NotificationsHeader(onBack = onBack)
+        NotificationsHeader(onBack = onBack, scale = scale)
 
         // 아직 알림 데이터 소스가 없으므로 항상 빈 상태를 보여준다.
         Box(
@@ -62,7 +67,7 @@ fun NotificationsScreen(
                 )
                 Spacer(Modifier.height(18.dp))
                 Text(
-                    text = "아직 알림이 없습니다",
+                    text = stringResource(R.string.notifications_empty_state),
                     color = NotificationsEmptyText,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
@@ -73,17 +78,20 @@ fun NotificationsScreen(
 }
 
 @Composable
-private fun NotificationsHeader(onBack: () -> Unit) {
+private fun NotificationsHeader(onBack: () -> Unit, scale: Float = 1f) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .padding(horizontal = 12.dp),
+            // 다른 화면들과 동일하게 고정 높이 대신 여백으로만 크기를 정해서
+            // 버튼의 화면상 위치·크기가 똑같아지게 한다.
+            .padding(horizontal = 18.dp * scale, vertical = 18.dp * scale),
     ) {
+        // 디자인은 기존 그대로(흰색 배경 + 그림자만 있는 단순한 원형 버튼) 유지하고,
+        // 다른 화면과 같은 위치·크기가 되도록 여백/사이즈만 맞춘다.
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .size(38.dp)
+                .size(40.dp * scale)
                 .shadow(5.dp, CircleShape)
                 .clip(CircleShape)
                 .background(Color.White)
@@ -92,14 +100,14 @@ private fun NotificationsHeader(onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Rounded.ChevronLeft,
-                contentDescription = "뒤로",
+                contentDescription = stringResource(R.string.notifications_back_content_description),
                 tint = NotificationsInk,
                 modifier = Modifier.size(26.dp),
             )
         }
 
         Text(
-            text = "알림",
+            text = stringResource(R.string.notifications_title),
             modifier = Modifier.align(Alignment.Center),
             color = NotificationsInk,
             fontSize = 17.sp,

@@ -19,7 +19,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.model.TestDraft
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,8 +42,8 @@ fun TestInfoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("테스트 정보 입력") },
-                navigationIcon = { TextButton(onClick = onBack) { Text("뒤로") } },
+                title = { Text(stringResource(R.string.test_info_title)) },
+                navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.test_info_back)) } },
             )
         },
     ) { innerPadding ->
@@ -60,12 +62,12 @@ fun TestInfoScreen(
                     onDraftChange(it, null, null, null)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("이름") },
+                label = { Text(stringResource(R.string.test_info_name_label)) },
                 singleLine = true,
                 isError = showNameError,
                 supportingText = {
                     if (showNameError) {
-                        Text("이름을 입력해주세요.")
+                        Text(stringResource(R.string.test_info_name_required))
                     }
                 },
             )
@@ -78,7 +80,7 @@ fun TestInfoScreen(
                     value = draft.type,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Type") },
+                    label = { Text(stringResource(R.string.test_info_type_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                 )
@@ -102,7 +104,7 @@ fun TestInfoScreen(
                 value = draft.info,
                 onValueChange = { onDraftChange(null, null, it, null) },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Memo") },
+                label = { Text(stringResource(R.string.test_info_memo_label)) },
                 minLines = 3,
             )
 
@@ -110,8 +112,8 @@ fun TestInfoScreen(
                 value = draft.delaySeconds,
                 onValueChange = { onDraftChange(null, null, null, it.filter { ch -> ch.isDigit() }) },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("촬영 지연 시간 (초)") },
-                placeholder = { Text("0 = 즉시 촬영") },
+                label = { Text(stringResource(R.string.test_info_delay_seconds_label)) },
+                placeholder = { Text(stringResource(R.string.test_info_delay_placeholder)) },
                 singleLine = true,
             )
 
@@ -124,7 +126,7 @@ fun TestInfoScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("촬영 시작 화면으로")
+                Text(stringResource(R.string.test_info_start_button))
             }
         }
     }

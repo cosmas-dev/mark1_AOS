@@ -55,6 +55,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.model.CaptureResult
 
 private val ReportTop = Color(0xFFE8F0F5)
@@ -79,11 +81,9 @@ fun ReportResultScreen(
     ) {
         Column(Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
             ReportHeader(onBack)
-            // Text("Jan 23, 2025, 4:55 PM", color = Color(0xFF7D8589), fontSize = 12.sp)
-            Text("2026월 9월 3일", color = Color(0xFF7D8589), fontSize = 12.sp)
+            Text(stringResource(R.string.report_result_sample_date), color = Color(0xFF7D8589), fontSize = 12.sp)
             Spacer(Modifier.height(5.dp))
-//            Text("COSMAS Report", color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("고스마님의 보고서", color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.report_result_title), color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             ReportTabs(detailsSelected) { detailsSelected = it }
             Spacer(Modifier.height(20.dp))
@@ -101,12 +101,11 @@ fun ReportResultScreen(
 private fun ReportHeader(onBack: () -> Unit) {
     Box(Modifier.fillMaxWidth().height(74.dp)) {
         CircleAction(Modifier.align(Alignment.CenterStart), onBack) {
-            Icon(Icons.Rounded.ChevronLeft, "뒤로", modifier = Modifier.size(26.dp))
+            Icon(Icons.Rounded.ChevronLeft, stringResource(R.string.report_result_back), modifier = Modifier.size(26.dp))
         }
-        // Text("Result", Modifier.align(Alignment.Center), fontSize = 17.sp, fontWeight = FontWeight.Bold)
-        Text("검사 결과", Modifier.align(Alignment.Center), fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.report_result_title_bar), Modifier.align(Alignment.Center), fontSize = 17.sp, fontWeight = FontWeight.Bold)
         CircleAction(Modifier.align(Alignment.CenterEnd), {}) {
-            Icon(Icons.Rounded.IosShare, "내보내기", modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.IosShare, stringResource(R.string.report_result_export), modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -116,8 +115,7 @@ private fun ReportTabs(details: Boolean, onSelect: (Boolean) -> Unit) {
     Row(
         Modifier.fillMaxWidth().height(44.dp).clip(CircleShape).background(Color.White.copy(.52f)).padding(3.dp),
     ) {
-//        listOf(false to "Summary", true to "Details").forEach { (value, title) ->
-        listOf(false to "요약", true to "상세정보").forEach { (value, title) ->
+        listOf(false to stringResource(R.string.report_result_tab_summary), true to stringResource(R.string.report_result_tab_details)).forEach { (value, title) ->
             Box(
                 Modifier.weight(1f).fillMaxSize().clip(CircleShape)
                     .background(if (details == value) Color.White else Color.Transparent)
@@ -136,10 +134,8 @@ private fun ReportSummary(captureResult: CaptureResult?, onSaveAndAct: () -> Uni
         Modifier.fillMaxWidth().padding(bottom = 92.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // ResultCard("M", "arijuana", "0.3", "ng/mL", true)
-        ResultCard("마리화나", "", "0.3", "ng/mL", true)
-        // ResultCard("F", "entanyl", "10", "ng/mL", false)
-        ResultCard("펜타닐", "", "21.5", "ng/mL", false)
+        ResultCard(stringResource(R.string.report_result_substance_marijuana), "", "0.3", "ng/mL", true)
+        ResultCard(stringResource(R.string.report_result_substance_fentanyl), "", "21.5", "ng/mL", false)
         Row(
             modifier = Modifier.fillMaxWidth().height(44.dp).clip(CircleShape)
                 .background(Brush.horizontalGradient(listOf(Color(0xFFE64E4E), Color(0xFFFF747A))))
@@ -155,14 +151,15 @@ private fun ReportSummary(captureResult: CaptureResult?, onSaveAndAct: () -> Uni
             )
             Spacer(Modifier.width(7.dp))
             Text(
-                "결과 저장 및 조치",
+                stringResource(R.string.report_result_save_and_act_button),
                 color = Color.White,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
             )
         }
 
-        // CaptureDebugSection(captureResult)
+        Spacer(Modifier.height(6.dp))
+        CaptureDebugSection(captureResult)
     }
 }
 
@@ -173,10 +170,10 @@ private fun CaptureDebugSection(captureResult: CaptureResult?) {
         Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text("촬영 이미지 / 분석 원본값", color = Color.Black, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.report_result_debug_section_title), color = Color.Black, fontSize = 15.sp, fontWeight = FontWeight.Bold)
 
         if (captureResult == null) {
-            Text("아직 촬영/분석 결과가 없습니다.", color = Color(0xFF7D8589), fontSize = 12.sp)
+            Text(stringResource(R.string.report_result_debug_no_result), color = Color(0xFF7D8589), fontSize = 12.sp)
             return@Column
         }
 
@@ -186,12 +183,12 @@ private fun CaptureDebugSection(captureResult: CaptureResult?) {
         if (bitmap != null) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentDescription = "촬영 이미지",
+                contentDescription = stringResource(R.string.report_result_captured_image_description),
                 modifier = Modifier.fillMaxWidth(),
                 contentScale = ContentScale.FillWidth,
             )
         } else {
-            Text("이미지를 불러올 수 없습니다.", color = Color(0xFFE64E4E), fontSize = 12.sp)
+            Text(stringResource(R.string.report_result_image_load_failed), color = Color(0xFFE64E4E), fontSize = 12.sp)
         }
 
         DebugValue("imagePath", captureResult.imagePath)
@@ -201,7 +198,7 @@ private fun CaptureDebugSection(captureResult: CaptureResult?) {
 
         val analysis = captureResult.analysis
         if (analysis == null) {
-            Text("분석 결과 없음", color = Color(0xFFE64E4E), fontSize = 12.sp)
+            Text(stringResource(R.string.report_result_no_analysis_result), color = Color(0xFFE64E4E), fontSize = 12.sp)
             return@Column
         }
 
@@ -258,7 +255,7 @@ private fun ResultCard(initial: String, name: String, value: String, unit: Strin
             Modifier.fillMaxSize().padding(start = 18.dp, end = 10.dp, top = 18.dp, bottom = 15.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(Modifier.width(105.dp).fillMaxSize()) {
+            Column(Modifier.width(140.dp).fillMaxSize()) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         initial,
@@ -293,7 +290,7 @@ private fun ResultCard(initial: String, name: String, value: String, unit: Strin
                     )
                 }
                 Text(
-                    "Cut-off Value ${if (negative) 2 else 1}",
+                    stringResource(R.string.report_result_cutoff_value, if (negative) 2 else 1),
                     color = Color(0xFF9CA4A8),
                     fontSize = captionSize,
                 )
@@ -405,34 +402,20 @@ private fun ReportDetails(profileName: String) {
             .clip(RoundedCornerShape(20.dp)).background(Color.White.copy(.63f)).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // DetailSection("Diagnostic Products")
-        // DetailRow("Device", "COSMAS001  ›")
-        // DetailRow("Kit", "COSMAS001 KIT  ›")
-        // DetailRow("Location", "8502 Preston Rd. Inglewood, Maine 98380")
-        // Spacer(Modifier.height(8.dp)); DetailSection("Profile")
-        // DetailRow("Name", profileName.ifBlank { "kim" })
-        // DetailRow("Age", "31")
-        // DetailRow("Email", "cosmas@cosmas.com")
-        // DetailRow("Phone", "+82-10-1234-5678")
-        // DetailRow("Address", "8502 Preston Rd. Inglewood, Maine 98380")
-        // Spacer(Modifier.height(8.dp)); DetailSection("Company")
-        // DetailRow("Company Name", "cosmas")
-        // DetailRow("Car Type", "Truck")
-        // DetailRow("Plate Number", "ABC-1234")
-        DetailSection("진단 제품 정보")
-        DetailRow("모델명", "COSMAS001  ›")
-        DetailRow("키트", "COSMAS001 KIT  ›")
-        DetailRow("위치", "서울 관악구 봉천로")
-        Spacer(Modifier.height(8.dp)); DetailSection("대상자 정보")
-        DetailRow("이름", profileName.ifBlank { "오류" })
-        DetailRow("나이", "31")
-        DetailRow("이메일", "cosmas@cosmas.com")
-        DetailRow("연락처", "+82-10-1234-5678")
-        DetailRow("주소", "서울 관악구 봉천로")
-        Spacer(Modifier.height(8.dp)); DetailSection("소속 정보")
-        DetailRow("회사명", "고스마")
-        DetailRow("차량 종류", "Truck")
-        DetailRow("차량 번호", "123가 4567")
+        DetailSection(stringResource(R.string.report_result_detail_section_diagnostic_product))
+        DetailRow(stringResource(R.string.report_result_detail_label_model), "COSMAS001  ›")
+        DetailRow(stringResource(R.string.report_result_detail_label_kit), "COSMAS001 KIT  ›")
+        DetailRow(stringResource(R.string.report_result_detail_label_location), "서울 관악구 봉천로")
+        Spacer(Modifier.height(8.dp)); DetailSection(stringResource(R.string.report_result_detail_section_profile))
+        DetailRow(stringResource(R.string.report_result_detail_label_name), profileName.ifBlank { stringResource(R.string.report_result_default_profile_name) })
+        DetailRow(stringResource(R.string.report_result_detail_label_age), "31")
+        DetailRow(stringResource(R.string.report_result_detail_label_email), "cosmas@cosmas.com")
+        DetailRow(stringResource(R.string.report_result_detail_label_phone), "+82-10-1234-5678")
+        DetailRow(stringResource(R.string.report_result_detail_label_address), "서울 관악구 봉천로")
+        Spacer(Modifier.height(8.dp)); DetailSection(stringResource(R.string.report_result_detail_section_company))
+        DetailRow(stringResource(R.string.report_result_detail_label_company_name), "고스마")
+        DetailRow(stringResource(R.string.report_result_detail_label_car_type), "Truck")
+        DetailRow(stringResource(R.string.report_result_detail_label_plate_number), "123가 4567")
     }
 }
 
@@ -448,12 +431,10 @@ private fun ReportDetails(profileName: String) {
 private fun ReportBottomActions(modifier: Modifier, onBack: () -> Unit, onRestart: () -> Unit) {
     Row(modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(Modifier.weight(.28f).height(58.dp).shadow(7.dp, CircleShape).clip(CircleShape).background(Color.White).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
-            // Text("Cancel", fontWeight = FontWeight.Bold)
-            Text("취소", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.report_result_cancel_button), fontWeight = FontWeight.Bold)
         }
         Box(Modifier.weight(.72f).height(58.dp).clip(CircleShape).background(Color.Black).clickable(onClick = onRestart), contentAlignment = Alignment.Center) {
-            // Text("Restart", color = Color.White, fontWeight = FontWeight.Bold)
-            Text("재검사", color = Color.White, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.report_result_restart_button), color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }

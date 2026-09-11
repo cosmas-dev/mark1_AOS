@@ -66,6 +66,17 @@ data class DeviceStatus(
     val lastError: String? = null,
 )
 
+/** DEV_INFO 응답(body.DATA)을 그대로 옮긴 구조체. */
+data class DeviceInfo(
+    val device: String = "",
+    val name: String = "",
+    val light: String = "",
+    val kit: String = "",
+    val mode: String = "",
+    val calib: String = "",
+    val status: String = "",
+)
+
 data class TestDraft(
     val name: String = "",
     val type: String = "Cortisol",
@@ -127,4 +138,16 @@ data class AppUiState(
 data class LoginUiState(
     val submitting: Boolean = false,
     val error: String? = null,
+)
+
+/** Diagnosis Report 화면의 검사 이력 한 줄. captures/persons/analysis_results를 조인한 결과. */
+data class ExamHistoryRow(
+    val captureId: String,
+    val personId: String?,
+    val personName: String,
+    val organization: String,
+    val diagnosisType: String,
+    val diagnosisItems: String,
+    val capturedAt: Long,
+    val positive: Boolean,
 )

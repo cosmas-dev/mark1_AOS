@@ -23,7 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Scaffold
@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -42,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cosmasbio.mark1.R
 
 data class DiagnosisProfile(
     val date: String,
@@ -100,6 +102,7 @@ fun DiagnoseScreen(
     onClose: () -> Unit,
     onProfileClick: (DiagnosisProfile) -> Unit,
     onAddClick: () -> Unit,
+    onMoreClick: (DiagnosisProfile) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -127,8 +130,8 @@ fun DiagnoseScreen(
                     DiagnoseHeader(onClose = onClose)
                     Spacer(Modifier.height(51.dp))
                     Text(
-//                        text = "Please select the basic\ninformation for the diagnosis.",
-                        text = "진단할 대상자를 선택해주세요.",
+                        text = stringResource(R.string.diagnose_title),
+                        modifier = Modifier.fillMaxWidth(),
                         color = DiagnoseText,
                         fontSize = 28.sp,
                         lineHeight = 35.sp,
@@ -137,8 +140,8 @@ fun DiagnoseScreen(
                     )
                     Spacer(Modifier.height(12.dp))
                     Text(
-//                        text = "If no information has been registered, please add it.",
-                        text = "등록된 정보가 없다면 새로 추가해 주세요.",
+                        text = stringResource(R.string.diagnose_subtitle),
+                        modifier = Modifier.fillMaxWidth(),
                         color = DiagnoseText,
                         fontSize = 18.sp,
                         lineHeight = 24.sp,
@@ -151,6 +154,7 @@ fun DiagnoseScreen(
                     DiagnosisProfileCard(
                         profile = profile,
                         onClick = { onProfileClick(profile) },
+                        onMoreClick = { onMoreClick(profile) },
                     )
                 }
             }
@@ -168,7 +172,7 @@ fun DiagnoseScreen(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
-                    contentDescription = "Add diagnosis information",
+                    contentDescription = stringResource(R.string.diagnose_add_content_description),
                     tint = Color.White,
                     modifier = Modifier.size(39.dp),
                 )
@@ -185,8 +189,7 @@ private fun DiagnoseHeader(onClose: () -> Unit) {
             .height(72.dp),
     ) {
         Text(
-            // text = "Diagnose",
-            text = "진단",
+            text = stringResource(R.string.diagnose_header_title),
             modifier = Modifier.align(Alignment.Center),
             color = Color.Black,
             fontSize = 20.sp,
@@ -194,28 +197,12 @@ private fun DiagnoseHeader(onClose: () -> Unit) {
             textAlign = TextAlign.Center,
         )
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .size(48.dp)
-                .shadow(8.dp, CircleShape)
-                .clip(CircleShape)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color.White.copy(alpha = .88f), Color.White.copy(alpha = .48f))
-                    )
-                )
-                .border(1.dp, Color.White.copy(alpha = .85f), CircleShape)
-                .clickable(onClick = onClose),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Close,
-                contentDescription = "Close",
-                tint = Color.Black,
-                modifier = Modifier.size(28.dp),
-            )
-        }
+        GlassCircleIconButton(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            onClick = onClose,
+            icon = Icons.Rounded.Close,
+            contentDescription = stringResource(R.string.diagnose_close_content_description),
+        )
     }
 }
 
@@ -223,6 +210,7 @@ private fun DiagnoseHeader(onClose: () -> Unit) {
 private fun DiagnosisProfileCard(
     profile: DiagnosisProfile,
     onClick: () -> Unit,
+    onMoreClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -284,12 +272,13 @@ private fun DiagnosisProfileCard(
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = .92f)),
+                    .background(Color.White.copy(alpha = .92f))
+                    .clickable(onClick = onMoreClick),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.MoreVert,
-                    contentDescription = "More options",
+                    imageVector = Icons.Rounded.MoreHoriz,
+                    contentDescription = stringResource(R.string.diagnose_more_options_content_description),
                     tint = Color.Black,
                     modifier = Modifier.size(27.dp),
                 )
@@ -297,11 +286,9 @@ private fun DiagnosisProfileCard(
         }
 
         Spacer(Modifier.height(13.dp))
-//        ProfileDetailRow("Diagnosis Type", profile.diagnosisType)
-        ProfileDetailRow("진단 유형", profile.diagnosisType)
+        ProfileDetailRow(stringResource(R.string.diagnose_type_label), profile.diagnosisType)
         Spacer(Modifier.height(8.dp))
-//        ProfileDetailRow("Diagnosis Items", profile.diagnosisItems)
-        ProfileDetailRow("검사 항목", profile.diagnosisItems)
+        ProfileDetailRow(stringResource(R.string.diagnose_items_label), profile.diagnosisItems)
     }
 }
 

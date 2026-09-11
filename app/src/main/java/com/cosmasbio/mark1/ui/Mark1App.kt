@@ -13,15 +13,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.cosmasbio.mark1.data.local.ReaderPreferences
+import com.cosmasbio.mark1.model.CaptureResult
 import com.cosmasbio.mark1.model.PersonInfo
 import kotlinx.coroutines.launch
 import com.cosmasbio.mark1.ui.screens.AddDiagnosisDetailsScreen
+import com.cosmasbio.mark1.ui.screens.DiagnosisDetailsInput
 import com.cosmasbio.mark1.ui.screens.AppInitScreen
+import com.cosmasbio.mark1.ui.screens.DiagnosisManagementScreen
+import com.cosmasbio.mark1.ui.screens.DiagnosisReportScreen
 import com.cosmasbio.mark1.ui.screens.GrayScaleResultScreen
 import com.cosmasbio.mark1.ui.screens.HomeScreen
+import com.cosmasbio.mark1.ui.screens.KitDetailsScreen
 import com.cosmasbio.mark1.ui.screens.InsertSampleScreen
 import com.cosmasbio.mark1.ui.screens.TestInfoScreen
 import com.cosmasbio.mark1.ui.screens.ConnectDeviceScreen
@@ -35,6 +43,10 @@ import com.cosmasbio.mark1.ui.screens.rememberBiometricLoginController
 import com.cosmasbio.mark1.ui.screens.MenuScreen
 import com.cosmasbio.mark1.ui.screens.NotificationsScreen
 import com.cosmasbio.mark1.ui.screens.PostTestActionScreen
+import com.cosmasbio.mark1.ui.screens.ProductsScreen
+import com.cosmasbio.mark1.ui.screens.ReaderInfoScreen
+import com.cosmasbio.mark1.ui.screens.ReaderNameScreen
+import com.cosmasbio.mark1.ui.screens.ReaderSettingsScreen
 import com.cosmasbio.mark1.ui.screens.SaveCompleteScreen
 
 @Composable
@@ -42,7 +54,8 @@ fun Mark1App(
     viewModel: Mark1ViewModel = viewModel(),
 ) {
     val navController = rememberNavController()
-    val startDestination = "intro"
+    // TODO: 테스트 편의상 "home"으로 바꿔둠. 로그인 플로우 확인할 땐 "intro"로 되돌릴 것.
+    val startDestination = "home"
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -130,7 +143,117 @@ fun Mark1App(
                     onStartDiagnosis = { navController.navigate("connectDevice") },
                     onNotificationClick = { navController.navigate("notifications") },
                     onMenuClick = { navController.navigate("menu") },
+                    onSettingsClick = { navController.navigate("products") },
+                    onDocumentClick = { navController.navigate("diagnosisReport") },
+                    onChecklistClick = { navController.navigate("diagnosisManagement") },
                 )
+            }
+
+            composable("products") {
+                val context = LocalContext.current
+                ProductsScreen(
+                    onMenuClick = { navController.navigate("menu") },
+                    onNotificationClick = { navController.navigate("notifications") },
+                    onBackToHome = {
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = false }
+                        }
+                    },
+                    onOpenReaderSettings = { navController.navigate("readerSettings") },
+                    onAddNewReader = { navController.navigate("connectDevice") },
+                    onOpenKitDetails = { navController.navigate("kitDetails") },
+                    onOpenDiagnosisReport = { navController.navigate("diagnosisReport") },
+                    onOpenDiagnosisManagement = { navController.navigate("diagnosisManagement") },
+                    // 화면에 재진입할 때마다 새로 읽어서, 이름을 바꾸거나 기기를 삭제하고
+                    // 돌아오면 바로 반영된다.
+                    readerName = remember { ReaderPreferences.getReaderName(context) },
+                    isReaderRegistered = remember { ReaderPreferences.isReaderRegistered(context) },
+                )
+            }
+
+            composable("kitDetails") {
+                KitDetailsScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable("diagnosisReport") {
+                val examHistory by viewModel.examHistory.collectAsState()
+                DiagnosisReportScreen(
+                    examHistory = examHistory,
+                    onMenuClick = { navController.navigate("menu") },
+                    onAddClick = { navController.navigate("diagnose") },
+                    onItemClick = { row -> navController.navigate("reportResult?captureId=${row.captureId}") },
+                    onMoreClick = { row ->
+                        scope.launch {
+                            val info = viewModel.loadPersonInfo(row.personId)
+                                ?: PersonInfo(name = row.personName)
+                            viewModel.setEditTarget(row.personId, row.captureId, info)
+                            navController.navigate("editDiagnosisDetails")
+                        }
+                    },
+                    onHomeClick = {
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = false }
+                        }
+                    },
+                    onChecklistClick = { navController.navigate("diagnosisManagement") },
+                    onSettingsClick = { navController.navigate("products") },
+                )
+            }
+
+            composable("diagnosisManagement") {
+                val examHistory by viewModel.examHistory.collectAsState()
+                DiagnosisManagementScreen(
+                    examHistory = examHistory,
+                    onMenuClick = { navController.navigate("menu") },
+                    onNotificationClick = { navController.navigate("notifications") },
+                    onCreateClick = { navController.navigate("diagnose") },
+                    onItemClick = { row -> navController.navigate("reportResult?captureId=${row.captureId}") },
+                    onMoreClick = { row ->
+                        scope.launch {
+                            val info = viewModel.loadPersonInfo(row.personId)
+                                ?: PersonInfo(name = row.personName)
+                            viewModel.setEditTarget(row.personId, row.captureId, info)
+                            navController.navigate("editDiagnosisDetails")
+                        }
+                    },
+                    onHomeClick = {
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = false }
+                        }
+                    },
+                    onDocumentClick = { navController.navigate("diagnosisReport") },
+                    onSettingsClick = { navController.navigate("products") },
+                )
+            }
+
+            composable("readerSettings") {
+                val context = LocalContext.current
+                ReaderSettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenReaderName = { navController.navigate("readerName") },
+                    onOpenReaderInfo = { navController.navigate("readerInfo") },
+                    onDeleteConfirmed = {
+                        ReaderPreferences.setReaderRegistered(context, false)
+                        navController.popBackStack("products", inclusive = false)
+                    },
+                    readerName = remember { ReaderPreferences.getReaderName(context) },
+                )
+            }
+
+            composable("readerName") {
+                val context = LocalContext.current
+                ReaderNameScreen(
+                    initialName = remember { ReaderPreferences.getReaderName(context) },
+                    onBack = { navController.popBackStack() },
+                    onSave = { newName ->
+                        ReaderPreferences.setReaderName(context, newName)
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            composable("readerInfo") {
+                ReaderInfoScreen(onBack = { navController.popBackStack() })
             }
 
             composable("notifications") {
@@ -145,6 +268,8 @@ fun Mark1App(
             }
 
             composable("connectDevice") {
+                val context = LocalContext.current
+
                 LaunchedEffect(Unit) {
                     viewModel.restoreKnownDeviceConnection()
                 }
@@ -159,6 +284,8 @@ fun Mark1App(
                     onConnect = {
                         viewModel.connectCosmasWifi(
                             onConnected = {
+                                // 실제 리더기와 연결됐으니 Products 화면 기준으로도 등록된 것으로 저장한다.
+                                ReaderPreferences.setReaderRegistered(context, true)
                                 // 연결 성공 후 바로 이동하지 않고
                                 // 현재 화면에서 체크와 Continue 버튼을 보여줌
 //                                navController.navigate("testInfo") {
@@ -185,11 +312,7 @@ fun Mark1App(
 
             composable("diagnose") {
                 DiagnoseScreen(
-                    onClose = {
-                        navController.navigate("home") {
-                            popUpTo("home") { inclusive = false }
-                        }
-                    },
+                    onClose = { navController.popBackStack() },
                     onProfileClick = { profile ->
                         viewModel.updateDraft(
                             type = profile.diagnosisType,
@@ -216,6 +339,20 @@ fun Mark1App(
                         )
                         navController.navigate("addDiagnosisDetails")
                     },
+                    onMoreClick = { profile ->
+                        viewModel.setEditTarget(
+                            personId = null,
+                            captureId = null,
+                            info = PersonInfo(
+                                name = profile.name,
+                                dateOfBirth = profile.dateOfBirth,
+                                email = profile.email,
+                                phoneNumber = profile.phoneNumber,
+                                organization = profile.organization,
+                            ),
+                        )
+                        navController.navigate("editDiagnosisDetails")
+                    },
                 )
             }
 
@@ -235,6 +372,43 @@ fun Mark1App(
                         navController.navigate("insertSample")
                     },
                 )
+            }
+
+            composable("editDiagnosisDetails") {
+                val editTarget by viewModel.editTarget.collectAsState()
+                val target = editTarget
+                if (target != null) {
+                    AddDiagnosisDetailsScreen(
+                        initialValue = DiagnosisDetailsInput(
+                            name = target.info.name,
+                            dateOfBirth = target.info.dateOfBirth,
+                            email = target.info.email,
+                            phoneNumber = target.info.phoneNumber,
+                            company = target.info.organization,
+                        ),
+                        onClose = {
+                            viewModel.clearEditTarget()
+                            navController.popBackStack()
+                        },
+                        onRegister = { details ->
+                            scope.launch {
+                                viewModel.savePersonInfo(
+                                    PersonInfo(
+                                        name = details.name,
+                                        dateOfBirth = details.dateOfBirth,
+                                        email = details.email,
+                                        phoneNumber = details.phoneNumber,
+                                        organization = details.company,
+                                    ),
+                                    personId = target.personId,
+                                    captureId = target.captureId,
+                                )
+                                viewModel.clearEditTarget()
+                                navController.popBackStack()
+                            }
+                        },
+                    )
+                }
             }
 
             composable("scan") {
@@ -278,10 +452,37 @@ fun Mark1App(
                 )
             }
 
-            composable("reportResult") {
+            composable(
+                route = "reportResult?captureId={captureId}",
+                arguments = listOf(
+                    navArgument("captureId") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                ),
+            ) { backStackEntry ->
+                val captureId = backStackEntry.arguments?.getString("captureId")
+
+                // captureId가 있으면(Diagnosis Report에서 과거 기록을 눌러 들어온 경우)
+                // 저장된 결과를 불러오고, 없으면(방금 촬영을 마친 흐름) 기존처럼 최신 결과를 그대로 쓴다.
+                var historicalResult by remember { mutableStateOf<CaptureResult?>(null) }
+                LaunchedEffect(captureId) {
+                    if (captureId != null) {
+                        historicalResult = viewModel.loadCaptureResult(captureId)
+                    }
+                }
+
+                val captureResult = if (captureId != null) historicalResult else uiState.latestCaptureResult
+                val profileName = if (captureId != null) {
+                    historicalResult?.name.orEmpty()
+                } else {
+                    uiState.draft.name
+                }
+
                 ReportResultScreen(
-                    profileName = uiState.draft.name,
-                    captureResult = uiState.latestCaptureResult,
+                    profileName = profileName,
+                    captureResult = captureResult,
                     onSaveAndAct = { navController.navigate("postTestAction") },
                     onBack = { navController.popBackStack() },
                     onRestart = {

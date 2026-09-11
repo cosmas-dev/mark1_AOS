@@ -3,6 +3,7 @@ package com.cosmasbio.mark1.data.device
 import android.net.Network
 import android.util.Log
 import com.cosmasbio.mark1.model.ConnectionStage
+import com.cosmasbio.mark1.model.DeviceInfo
 import com.cosmasbio.mark1.model.DeviceStatus
 import java.io.BufferedInputStream
 import java.io.IOException
@@ -199,7 +200,7 @@ class Mark1DeviceManager(private val ioDispatcher: CoroutineDispatcher = Dispatc
             connect()
         }
 
-    suspend fun loadDeviceInfo(): String? =
+    suspend fun loadDeviceInfo(): DeviceInfo? =
         withContext(ioDispatcher) {
             if (!ensureConnected()) return@withContext null
 
@@ -207,11 +208,28 @@ class Mark1DeviceManager(private val ioDispatcher: CoroutineDispatcher = Dispatc
                 sendCommandExpectResponse(groupCode = "A001", cmd = "DEV_INFO", data = "1")
                     ?: return@withContext null
 
-            val modelName = extractBodyData(response).ifBlank { "COSMAS-1000" }
+            // DEV_INFO의 DATA는 문자열이 아니라 객체로 온다: {"device","name","light","kit","mode","calib","status"}
+            val data = response.optJSONObject("body")?.optJSONObject("DATA")
+                ?: return@withContext null
 
-            update { it.copy(modelName = modelName, lastMessage = "장비 정보 조회 완료") }
+            val info = DeviceInfo(
+                device = data.optString("device"),
+                name = data.optString("name"),
+                light = data.optString("light"),
+                kit = data.optString("kit"),
+                mode = data.optString("mode"),
+                calib = data.optString("calib"),
+                status = data.optString("status"),
+            )
 
-            modelName
+            update {
+                it.copy(
+                    modelName = info.name.ifBlank { info.device }.ifBlank { it.modelName },
+                    lastMessage = "장비 정보 조회 완료",
+                )
+            }
+
+            info
         }
 
     suspend fun toggleBacklight(): Boolean =

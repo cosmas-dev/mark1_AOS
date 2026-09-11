@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -52,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.model.LoginUiState
 
 private val LoginInk = Color(0xFF16181A)
@@ -81,6 +83,7 @@ fun LoginScreen(
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val biometricClearedMessage = stringResource(R.string.login_biometric_cleared_message)
 
     Column(
         modifier = modifier
@@ -102,7 +105,7 @@ fun LoginScreen(
             Spacer(Modifier.height(20.dp))
 
             LoginField(
-                label = "이메일",
+                label = stringResource(R.string.login_email_label),
                 value = email,
                 onValueChange = {
                     email = it.trim()
@@ -113,7 +116,7 @@ fun LoginScreen(
                     if (emailValid) {
                         Icon(
                             imageVector = Icons.Rounded.Check,
-                            contentDescription = "사용 가능한 이메일",
+                            contentDescription = stringResource(R.string.login_email_available_desc),
                             tint = LoginCheckBlue,
                             modifier = Modifier.size(22.dp),
                         )
@@ -124,7 +127,7 @@ fun LoginScreen(
             Spacer(Modifier.height(18.dp))
 
             LoginField(
-                label = "비밀번호",
+                label = stringResource(R.string.login_password_label),
                 value = password,
                 onValueChange = {
                     password = it
@@ -178,7 +181,7 @@ fun LoginScreen(
                     },
                     onClear = {
                         biometric.clear()
-                        onShowMessage("저장된 생체인증 로그인을 삭제했습니다.")
+                        onShowMessage(biometricClearedMessage)
                     },
                 )
             }
@@ -206,14 +209,14 @@ private fun LoginHeader(onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Rounded.ChevronLeft,
-                contentDescription = "뒤로",
+                contentDescription = stringResource(R.string.login_back_desc),
                 tint = LoginInk,
                 modifier = Modifier.size(28.dp),
             )
         }
 
         Text(
-            text = "로그인",
+            text = stringResource(R.string.login_title),
             modifier = Modifier.align(Alignment.Center),
             color = LoginInk,
             fontSize = 17.sp,
@@ -273,14 +276,14 @@ private fun AccountHelpLinks() {
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        HelpLink("아이디 찾기") { /* TODO: 아이디 찾기 */ }
+        HelpLink(stringResource(R.string.login_find_id)) { /* TODO: 아이디 찾기 */ }
         Text(
             text = "l",
             modifier = Modifier.padding(horizontal = 14.dp),
             color = LoginLabel,
             fontSize = 14.sp,
         )
-        HelpLink("비밀번호 찾기") { /* TODO: 비밀번호 찾기 */ }
+        HelpLink(stringResource(R.string.login_find_password)) { /* TODO: 비밀번호 찾기 */ }
     }
 }
 
@@ -312,7 +315,7 @@ private fun SubmitButton(enabled: Boolean, submitting: Boolean, onClick: () -> U
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = if (submitting) "로그인 중..." else "로그인",
+            text = if (submitting) stringResource(R.string.login_submitting) else stringResource(R.string.login_title),
             color = if (enabled) Color.White else LoginDisabledText,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
@@ -356,7 +359,7 @@ private fun SaveBiometricToggle(checked: Boolean, onCheckedChange: (Boolean) -> 
         }
         Spacer(Modifier.width(10.dp))
         Text(
-            text = "다음부터 생체인증으로 로그인",
+            text = stringResource(R.string.login_save_biometric_toggle),
             color = LoginLabel,
             fontSize = 14.sp,
         )
@@ -388,7 +391,7 @@ private fun BiometricLoginButton(
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            text = "생체인증으로 로그인",
+            text = stringResource(R.string.login_biometric_login_button),
             color = LoginCheckBlue,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
@@ -397,7 +400,7 @@ private fun BiometricLoginButton(
 
     Spacer(Modifier.height(10.dp))
     Text(
-        text = if (email.isBlank()) "저장된 로그인 삭제" else "$email · 저장 해제",
+        text = if (email.isBlank()) stringResource(R.string.login_saved_login_clear) else stringResource(R.string.login_saved_email_unlink, email),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(

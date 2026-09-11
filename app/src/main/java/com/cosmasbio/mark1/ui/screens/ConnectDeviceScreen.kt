@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -102,11 +103,9 @@ fun ConnectDeviceScreen(
 
                 Text(
                     text = if (isConnected) {
-//                        "Reader connected.\nStart diagnosis now?"
-                          "리더기 연결 완료.\n진단을 시작할까요?"
+                        stringResource(R.string.connect_device_connected_title)
                     } else {
-//                        "Connecting the reader will start the diagnosis. Would you like to connect?"
-                          "리더기를 연결하고\n진단을 시작하세요."
+                        stringResource(R.string.connect_device_disconnected_title)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     color = Color(0xFF202124),
@@ -121,7 +120,7 @@ fun ConnectDeviceScreen(
 
             Image(
                 painter = painterResource(id = R.drawable.device),
-                contentDescription = "COSMAS reader device",
+                contentDescription = stringResource(R.string.connect_device_reader_image_desc),
                 modifier = Modifier
                     .align(Alignment.Center)
                     .fillMaxWidth(0.65f)
@@ -149,8 +148,7 @@ fun ConnectDeviceScreen(
             }
 
             Text(
-//                text = "Need help?",
-                text = "도움이 필요하신가요?",
+                text = stringResource(R.string.connect_device_need_help),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 110.dp),
@@ -160,8 +158,11 @@ fun ConnectDeviceScreen(
             )
 
             ConnectButton(
-//                text = if (isConnected) "Continue" else "Connect",
-                text = if (isConnected) "진단 시작하기" else "연결하기",
+                text = if (isConnected) {
+                    stringResource(R.string.connect_device_continue_button)
+                } else {
+                    stringResource(R.string.connect_device_connect_button)
+                },
                 onClick = if (isConnected) onContinue else onConnect,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -237,7 +238,7 @@ private fun ConnectionSuccessBadge(
         ) {
             Icon(
                 imageVector = Icons.Rounded.Check,
-                contentDescription = "Reader connected",
+                contentDescription = stringResource(R.string.connect_device_reader_connected_desc),
                 tint = Color.White,
                 modifier = Modifier.size(35.dp),
             )
@@ -258,8 +259,7 @@ private fun ConnectTopBar(
         Spacer(modifier = Modifier.size(48.dp))
 
         Text(
-            // text = "Connect Device",
-            text = "기기 연결",
+            text = stringResource(R.string.connect_device_title),
             modifier = Modifier.weight(1f),
             color = Color.Black,
             fontSize = 20.sp,
@@ -309,7 +309,7 @@ private fun CloseCircleButton(
     ) {
         Icon(
             imageVector = Icons.Rounded.Close,
-            contentDescription = "닫기",
+            contentDescription = stringResource(R.string.connect_device_close),
             tint = Color.Black,
             modifier = Modifier.size(28.dp),
         )

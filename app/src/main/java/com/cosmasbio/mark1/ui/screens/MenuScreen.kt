@@ -16,13 +16,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.NotificationsNone
 import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
@@ -36,12 +34,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cosmasbio.mark1.R
 
 private val MenuTop = Color(0xFFEFF3F6)
 private val MenuBottom = Color(0xFFD5DDE4)
@@ -63,6 +63,9 @@ fun MenuScreen(
 
     val openAdminConsole = rememberOpenAdminConsole()
 
+    // 홈 화면과 같은 비율로 상단 버튼 크기·여백을 맞추기 위한 값 (디자인 기준 360dp).
+    val scale = LocalConfiguration.current.screenWidthDp.dp / 360.dp
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -70,7 +73,7 @@ fun MenuScreen(
             .statusBarsPadding()
             .navigationBarsPadding(),
     ) {
-        MenuHeader(onBack = onBack, onNotifications = onNotifications)
+        MenuHeader(onBack = onBack, onNotifications = onNotifications, scale = scale)
 
         Column(
             modifier = Modifier
@@ -79,27 +82,27 @@ fun MenuScreen(
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(Modifier.height(6.dp))
-            MenuSectionTitle("앱")
+            MenuSectionTitle(stringResource(R.string.menu_section_app))
             MenuCard {
                 MenuToggleRow(
-                    title = "진단 이력 저장",
+                    title = stringResource(R.string.menu_save_diagnosis_history),
                     checked = saveHistory,
                     onCheckedChange = { saveHistory = it },
                 )
                 MenuRowDivider()
-                MenuLinkRow("알림 설정", onClick = onNotifications)
+                MenuLinkRow(stringResource(R.string.menu_notification_settings), onClick = onNotifications)
                 MenuRowDivider()
-                MenuLinkRow("언어 변경") { /* TODO: 언어 선택 */ }
+                MenuLinkRow(stringResource(R.string.menu_change_language)) { /* TODO: 언어 선택 */ }
             }
 
             Spacer(Modifier.height(22.dp))
-            MenuSectionTitle("도움")
+            MenuSectionTitle(stringResource(R.string.menu_section_help))
             MenuCard {
-                MenuLinkRow("앱 정보") { /* TODO: 앱 정보 */ }
+                MenuLinkRow(stringResource(R.string.menu_app_info)) { /* TODO: 앱 정보 */ }
                 MenuRowDivider()
-                MenuLinkRow("고객지원") { /* TODO: 고객지원 */ }
+                MenuLinkRow(stringResource(R.string.menu_customer_support)) { /* TODO: 고객지원 */ }
                 MenuRowDivider()
-                MenuLinkRow("서비스 안내") { /* TODO: 서비스 안내 */ }
+                MenuLinkRow(stringResource(R.string.menu_service_guide)) { /* TODO: 서비스 안내 */ }
             }
 
             Spacer(Modifier.height(40.dp))
@@ -114,7 +117,7 @@ fun MenuScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "관리자 시스템에서 보기",
+                text = stringResource(R.string.menu_view_in_admin_console),
                 color = MenuLinkBlue,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
@@ -131,57 +134,40 @@ fun MenuScreen(
 }
 
 @Composable
-private fun MenuHeader(onBack: () -> Unit, onNotifications: () -> Unit) {
+private fun MenuHeader(onBack: () -> Unit, onNotifications: () -> Unit, scale: Float = 1f) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .padding(horizontal = 12.dp),
+            // 홈 화면 TopActions와 동일하게 고정 높이 대신 여백으로만 크기를 정해서
+            // 버튼의 화면상 위치가 홈과 똑같아지게 한다.
+            .padding(horizontal = 18.dp * scale, vertical = 18.dp * scale),
     ) {
-        MenuCircleButton(Modifier.align(Alignment.CenterStart), onBack) {
-            Icon(
-                imageVector = Icons.Rounded.ChevronLeft,
-                contentDescription = "뒤로",
-                tint = MenuInk,
-                modifier = Modifier.size(26.dp),
-            )
-        }
+        // 홈 화면 상단 버튼과 동일한 크기·디자인을 쓰기 위해 GlassCircleIconButton을 그대로 재사용한다.
+        GlassCircleIconButton(
+            modifier = Modifier.align(Alignment.CenterStart),
+            onClick = onBack,
+            icon = Icons.Rounded.ChevronLeft,
+            iconTint = MenuInk,
+            contentDescription = stringResource(R.string.menu_back_content_description),
+            size = 40.dp * scale,
+        )
 
         Text(
-            text = "메뉴",
+            text = stringResource(R.string.menu_title),
             modifier = Modifier.align(Alignment.Center),
             color = MenuInk,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
         )
 
-        MenuCircleButton(Modifier.align(Alignment.CenterEnd), onNotifications) {
-            Icon(
-                imageVector = Icons.Rounded.NotificationsNone,
-                contentDescription = "알림",
-                tint = MenuInk,
-                modifier = Modifier.size(21.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun MenuCircleButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier = modifier
-            .size(38.dp)
-            .shadow(5.dp, CircleShape)
-            .clip(CircleShape)
-            .background(Color.White)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
+        // 홈 화면과 동일한 알림 아이콘(drawable)을 그대로 사용한다.
+        GlassCircleIconButton(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            onClick = onNotifications,
+            iconRes = R.drawable.ic_notification,
+            contentDescription = stringResource(R.string.menu_notifications_content_description),
+            size = 40.dp * scale,
+        )
     }
 }
 

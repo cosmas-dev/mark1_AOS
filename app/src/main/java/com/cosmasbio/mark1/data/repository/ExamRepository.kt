@@ -8,8 +8,11 @@ import com.cosmasbio.mark1.data.local.PersonEntity
 import com.cosmasbio.mark1.data.local.SyncStatus
 import com.cosmasbio.mark1.model.AnalysisReport
 import com.cosmasbio.mark1.model.CaptureResult
+import com.cosmasbio.mark1.model.ExamHistoryRow
 import com.cosmasbio.mark1.model.PersonInfo
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
+
 
 /**
  * 검사 데이터 로컬 저장소.
@@ -129,4 +132,89 @@ class ExamRepository(private val db: Mark1Database) {
         db.captureDao().updateSyncStatus(captureId, SyncStatus.FAILED, error?.take(500))
 
     suspend fun unsyncedCount(): Int = db.captureDao().countUnsynced()
+
+    fun examHistory(): Flow<List<ExamHistoryRow>> = db.captureDao().observeExamHistory()
+
+    /** Diagnosis Report에서 과거 검사 하나를 눌렀을 때, 저장된 촬영/분석 결과를 다시 조립한다. */
+    suspend fun captureResultOf(captureId: String): CaptureResult? {
+        val capture = db.captureDao().findById(captureId) ?: return null
+        val analysisEntity = db.analysisDao().findByCaptureId(captureId)
+        val person = capture.personId?.let { db.personDao().findById(it) }
+
+        val analysis = analysisEntity?.let {
+            AnalysisReport(
+                rawJson = it.rawJson,
+                imagePath = capture.localImagePath,
+                imageWidth = it.imageWidth,
+                imageHeight = it.imageHeight,
+                roiX = it.roiX,
+                roiY = it.roiY,
+                roiW = it.roiW,
+                roiH = it.roiH,
+                channelName = it.channelName,
+                noiseSigma = it.noiseSigma,
+                cPosition = it.cPosition,
+                cSnr = it.cSnr,
+                tPosition = it.tPosition,
+                tSnr = it.tSnr,
+                tDetected = it.tDetected,
+                tWeak = it.tWeak,
+                h1SplitValid = it.h1SplitValid,
+                peakSeparationPx = it.peakSeparationPx,
+                numPeaks = it.numPeaks,
+            )
+        }
+
+        return CaptureResult(
+            imagePath = capture.localImagePath,
+            name = person?.name.orEmpty(),
+            type = analysisEntity?.testType.orEmpty(),
+            info = analysisEntity?.testInfo.orEmpty(),
+            analysis = analysis,
+            captureId = capture.captureId,
+            imageSha256 = capture.imageSha256,
+            capturedAtMillis = capture.capturedAt,
+        )
+    }
+
+    suspend fun personInfo(personId: String?): PersonInfo? {
+        val entity = person(personId) ?: return null
+        return PersonInfo(
+            name = entity.name,
+            dateOfBirth = entity.dateOfBirth,
+            email = entity.email,
+            phoneNumber = entity.phoneNumber,
+            organization = entity.organization,
+        )
+    }
+
+    /**
+     * 대상자 정보를 저장한다. personId가 있으면 그 사람 레코드를 그대로 갱신하고,
+     * 없으면 이름+생년월일로 기존 인물을 찾아 재사용하거나 새로 만든다([resolvePersonId]).
+     */
+    suspend fun savePersonInfo(info: PersonInfo, personId: String?): String? {
+        val now = System.currentTimeMillis()
+        if (personId != null) {
+            // upsert(REPLACE) 대신 UPDATE를 써서, 같은 사람의 다른 촬영 기록이
+            // captures.personId(ON DELETE SET NULL)로 끊어지지 않게 한다.
+            db.personDao().update(
+                personId = personId,
+                name = info.name,
+                dateOfBirth = info.dateOfBirth,
+                email = info.email,
+                phoneNumber = info.phoneNumber,
+                organization = info.organization,
+            )
+            return personId
+        }
+        return resolvePersonId(info, now)
+    }
+
+    /**
+     * Diagnosis Report/Management에서 "..."로 정보를 수정했을 때, 원래 personId가 없었다면
+     * (촬영 당시 대상자가 연결되지 않았던 경우) 새로 저장/매칭된 인물을 이 촬영에 다시 연결한다.
+     */
+    suspend fun relinkCapturePerson(captureId: String, personId: String?) {
+        db.captureDao().updatePersonLink(captureId, personId)
+    }
 }

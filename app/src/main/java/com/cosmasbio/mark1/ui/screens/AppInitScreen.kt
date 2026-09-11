@@ -11,7 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.model.DeviceStatus
 
 @Composable
@@ -30,7 +32,7 @@ fun AppInitScreen(
         verticalArrangement = Arrangement.Center,
     ) {
         CircularProgressIndicator()
-        Text("Device 정보 불러오는 중...", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.app_init_loading_device_info), style = MaterialTheme.typography.titleMedium)
         Text(deviceStatus.lastMessage, modifier = Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

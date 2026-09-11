@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -97,7 +98,7 @@ fun IntroScreen(
             // 경찰청 + COSMAS 가 하나로 합쳐진 로고 이미지.
             Image(
                 painter = painterResource(R.drawable.intro_police_cosmas),
-                contentDescription = "경찰청 · COSMAS",
+                contentDescription = stringResource(R.string.intro_police_cosmas_desc),
                 modifier = Modifier
                     .width(176.dp)
                     .aspectRatio(INTRO_LOGO_ASPECT_RATIO),
@@ -132,7 +133,7 @@ private fun LoginButton(onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "로그인",
+            text = stringResource(R.string.intro_login_button),
             color = Color.White,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,

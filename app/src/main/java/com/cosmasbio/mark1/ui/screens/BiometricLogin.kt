@@ -11,10 +11,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.data.auth.BiometricCredentialStore
 
 /** 로그인 화면에서 쓰는 생체인증 상태와 동작. */
 class BiometricLoginController internal constructor(
+    private val context: Context,
     private val store: BiometricCredentialStore,
     private val activity: FragmentActivity?,
     private val refresh: () -> Unit,
@@ -29,24 +31,24 @@ class BiometricLoginController internal constructor(
 
     /** 생체인증으로 저장된 로그인 정보를 꺼낸다. */
     fun login(onSuccess: (email: String, password: String) -> Unit, onError: (String) -> Unit) {
-        val act = activity ?: return onError("생체인증을 사용할 수 없습니다.")
+        val act = activity ?: return onError(context.getString(R.string.biometric_unavailable))
         val cipher = store.decryptCipher() ?: run {
             refresh()
-            return onError("저장된 로그인 정보가 만료되었습니다. 비밀번호로 다시 로그인해 주세요.")
+            return onError(context.getString(R.string.biometric_saved_login_expired))
         }
 
         prompt(
             activity = act,
-            title = "생체인증으로 로그인",
+            title = context.getString(R.string.biometric_login_prompt_title),
             subtitle = store.savedEmail().orEmpty(),
             cipher = cipher,
             onError = onError,
         ) { result ->
-            val resultCipher = result.cryptoObject?.cipher ?: return@prompt onError("인증에 실패했습니다.")
+            val resultCipher = result.cryptoObject?.cipher ?: return@prompt onError(context.getString(R.string.biometric_auth_failed))
             val loaded = store.load(resultCipher)
             if (loaded == null) {
                 refresh()
-                onError("저장된 로그인 정보를 읽지 못했습니다.")
+                onError(context.getString(R.string.biometric_saved_login_read_failed))
             } else {
                 onSuccess(loaded.first, loaded.second)
             }
@@ -60,8 +62,8 @@ class BiometricLoginController internal constructor(
 
         prompt(
             activity = act,
-            title = "생체인증 등록",
-            subtitle = "다음 로그인부터 생체인증을 사용합니다",
+            title = context.getString(R.string.biometric_register_title),
+            subtitle = context.getString(R.string.biometric_register_subtitle),
             cipher = cipher,
             onError = { onDone(false) },
         ) { result ->
@@ -104,7 +106,7 @@ class BiometricLoginController internal constructor(
             BiometricPrompt.PromptInfo.Builder()
                 .setTitle(title)
                 .setSubtitle(subtitle)
-                .setNegativeButtonText("취소")
+                .setNegativeButtonText(context.getString(R.string.biometric_cancel))
                 .setConfirmationRequired(false)
                 .build(),
             BiometricPrompt.CryptoObject(cipher),
@@ -120,6 +122,7 @@ fun rememberBiometricLoginController(): BiometricLoginController {
 
     return remember(context, version) {
         BiometricLoginController(
+            context = context,
             store = BiometricCredentialStore(context),
             activity = context.findActivity(),
             refresh = { version++ },

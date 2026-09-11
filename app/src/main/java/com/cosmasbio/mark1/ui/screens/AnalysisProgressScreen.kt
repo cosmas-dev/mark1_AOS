@@ -41,10 +41,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.model.CaptureUiState
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
@@ -130,9 +132,9 @@ fun AnalysisProgressScreen(
             Spacer(Modifier.height(54.dp))
             Text(
                 text = when {
-                    failed -> "분석 실패\n다시 시도해 주세요."
-                    stage == STAGE_DONE -> "분석 완료\n검사 결과를 확인해 주세요."
-                    else -> "분석 중..."
+                    failed -> stringResource(R.string.analysis_progress_title_failed)
+                    stage == STAGE_DONE -> stringResource(R.string.analysis_progress_title_done)
+                    else -> stringResource(R.string.analysis_progress_title_analyzing)
                 },
                 color = AnalysisInk,
                 fontSize = 25.sp,
@@ -144,8 +146,8 @@ fun AnalysisProgressScreen(
             Text(
                 text = when {
                     failed -> captureUiState.error.orEmpty()
-                    captureUiState.remainingSeconds > 0 -> "촬영까지 ${captureUiState.remainingSeconds}초"
-                    else -> "최대 10분 정도 소요될 수 있습니다."
+                    captureUiState.remainingSeconds > 0 -> stringResource(R.string.analysis_progress_countdown_seconds, captureUiState.remainingSeconds)
+                    else -> stringResource(R.string.analysis_progress_time_estimate)
                 },
                 color = AnalysisInk,
                 fontSize = 16.sp,
@@ -158,11 +160,11 @@ fun AnalysisProgressScreen(
 
             Text(
                 text = when {
-                    failed -> "분석 실패"
-                    stage == STAGE_DONE -> "분석 완료"
-                    stage == STAGE_ANALYZING -> "이미지 분석 중..."
-                    stage == STAGE_CAPTURING -> "촬영 중..."
-                    else -> "촬영 준비 중..."
+                    failed -> stringResource(R.string.analysis_progress_status_failed)
+                    stage == STAGE_DONE -> stringResource(R.string.analysis_progress_status_done)
+                    stage == STAGE_ANALYZING -> stringResource(R.string.analysis_progress_status_analyzing)
+                    stage == STAGE_CAPTURING -> stringResource(R.string.analysis_progress_status_capturing)
+                    else -> stringResource(R.string.analysis_progress_status_preparing)
                 },
                 color = Color(0xFF81898D),
                 fontSize = 19.sp,
@@ -187,7 +189,7 @@ fun AnalysisProgressScreen(
                             },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("다시 시도", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.analysis_progress_retry_button), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 Box(
@@ -200,7 +202,7 @@ fun AnalysisProgressScreen(
                         .clickable(onClick = onCancel),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("취소", color = AnalysisInk, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.analysis_progress_cancel_button), color = AnalysisInk, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 }
             }
             Spacer(Modifier.height(14.dp))
@@ -252,7 +254,7 @@ private fun CircularAnalysisProgress(progress: Float, percent: Int) {
             )
         }
         Text(
-            text = "$percent%",
+            text = stringResource(R.string.analysis_progress_percent_label, percent),
             color = AnalysisBlue,
             fontSize = 43.sp,
             fontWeight = FontWeight.Bold,
@@ -264,8 +266,7 @@ private fun CircularAnalysisProgress(progress: Float, percent: Int) {
 private fun AnalysisHeader(onClose: () -> Unit) {
     Box(Modifier.fillMaxWidth().height(72.dp)) {
         Text(
-            // "Diagnose",
-            "진단",
+            stringResource(R.string.analysis_progress_header_title),
             modifier = Modifier.align(Alignment.Center),
             color = Color.Black,
             fontSize = 20.sp,
@@ -282,7 +283,7 @@ private fun AnalysisHeader(onClose: () -> Unit) {
                 .clickable(onClick = onClose),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.Close, "Close", tint = Color.Black, modifier = Modifier.size(27.dp))
+            Icon(Icons.Rounded.Close, stringResource(R.string.analysis_progress_close_content_description), tint = Color.Black, modifier = Modifier.size(27.dp))
         }
     }
 }

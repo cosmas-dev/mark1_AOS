@@ -99,7 +99,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cosmasbio.mark1.R
 import com.cosmasbio.mark1.model.CaptureUiState
 import com.cosmasbio.mark1.model.TestDraft
 
@@ -115,10 +117,10 @@ fun InsertSampleScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("촬영 준비") },
+                title = { Text(stringResource(R.string.insert_sample_title)) },
                 navigationIcon = {
                     TextButton(onClick = { if (!captureUiState.capturing && !captureUiState.analyzing) onBack() }) {
-                        Text("뒤로")
+                        Text(stringResource(R.string.insert_sample_back_button))
                     }
                 },
             )
@@ -136,11 +138,11 @@ fun InsertSampleScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("1. 샘플을 키트에 떨어뜨려 주세요.", style = MaterialTheme.typography.titleMedium)
-                    Text("2. 키트를 리더기에 넣고 닫아 주세요.")
-                    Text("3. 촬영 후 자동 분석이 진행됩니다.")
+                    Text(stringResource(R.string.insert_sample_step1), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.insert_sample_step2))
+                    Text(stringResource(R.string.insert_sample_step3))
                     if (draft.delaySeconds.isNotBlank() && draft.delaySeconds != "0") {
-                        Text("지연 시간: ${draft.delaySeconds}초")
+                        Text(stringResource(R.string.insert_sample_delay_seconds, draft.delaySeconds))
                     }
                 }
             }
@@ -154,11 +156,11 @@ fun InsertSampleScreen(
                         CircularProgressIndicator()
                         when {
                             captureUiState.remainingSeconds > 0 ->
-                                Text("촬영까지 ${captureUiState.remainingSeconds}초")
+                                Text(stringResource(R.string.insert_sample_countdown_seconds, captureUiState.remainingSeconds))
                             captureUiState.analyzing ->
-                                Text("이미지 분석중...")
+                                Text(stringResource(R.string.insert_sample_analyzing))
                             else ->
-                                Text("촬영 진행중...")
+                                Text(stringResource(R.string.insert_sample_capturing))
                         }
                     }
                 }
@@ -170,8 +172,8 @@ fun InsertSampleScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("오류: ${captureUiState.error}", color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = onDismissError) { Text("닫기") }
+                        Text(stringResource(R.string.insert_sample_error_prefix, captureUiState.error ?: ""), color = MaterialTheme.colorScheme.error)
+                        TextButton(onClick = onDismissError) { Text(stringResource(R.string.insert_sample_close_button)) }
                     }
                 }
             }
@@ -183,9 +185,9 @@ fun InsertSampleScreen(
             ) {
                 Text(
                     when {
-                        captureUiState.analyzing -> "분석 진행중..."
-                        captureUiState.capturing -> "촬영 진행중..."
-                        else -> "촬영 시작"
+                        captureUiState.analyzing -> stringResource(R.string.insert_sample_analyzing_button)
+                        captureUiState.capturing -> stringResource(R.string.insert_sample_capturing)
+                        else -> stringResource(R.string.insert_sample_start_button)
                     }
                 )
             }

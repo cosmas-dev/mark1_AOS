@@ -32,11 +32,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cosmasbio.mark1.R
 
 private val CompleteTop = Color(0xFFF1F3F5)
 private val CompleteBottom = Color(0xFFDCE2E7)
@@ -60,7 +62,7 @@ fun SaveCompleteScreen(
             .statusBarsPadding()
             .navigationBarsPadding(),
     ) {
-        ActionHeader(title = "저장 완료", onBack = onBack, showShare = false)
+        ActionHeader(title = stringResource(R.string.save_complete_header_title), onBack = onBack, showShare = false)
 
         Column(
             modifier = Modifier
@@ -87,7 +89,7 @@ fun SaveCompleteScreen(
 
             Spacer(Modifier.height(18.dp))
             Text(
-                text = "검사 기록이 저장되었습니다",
+                text = stringResource(R.string.save_complete_saved_message),
                 color = ActionInk,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
@@ -95,7 +97,7 @@ fun SaveCompleteScreen(
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "관리자 시스템에 동기화 되었습니다",
+                text = stringResource(R.string.save_complete_synced_message),
                 color = ActionSubText,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
@@ -106,14 +108,14 @@ fun SaveCompleteScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                ActionSectionTitle("검사 ID")
+                ActionSectionTitle(stringResource(R.string.save_complete_exam_id_title))
                 ExamIdCard(
                     examId = examId,
                     onCopy = { clipboard.setText(AnnotatedString(examId)) },
                 )
 
                 Spacer(Modifier.height(6.dp))
-                ActionSectionTitle("검사 결과 요약")
+                ActionSectionTitle(stringResource(R.string.save_complete_result_summary_title))
                 ResultSummaryCard(rows = sampleTestResultRows)
             }
 
@@ -147,7 +149,7 @@ private fun ExamIdCard(examId: String, onCopy: () -> Unit) {
         )
         Icon(
             imageVector = Icons.Rounded.ContentCopy,
-            contentDescription = "검사 ID 복사",
+            contentDescription = stringResource(R.string.save_complete_copy_exam_id_desc),
             tint = Color(0xFF6B7278),
             modifier = Modifier
                 .size(20.dp)
@@ -176,7 +178,7 @@ private fun CompleteBottomActions(
                 .clickable(onClick = onStartNewExam),
             contentAlignment = Alignment.Center,
         ) {
-            Text("새 검사 시작", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.save_complete_start_new_exam), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
         Spacer(Modifier.height(10.dp))
@@ -189,7 +191,7 @@ private fun CompleteBottomActions(
                 .clickable(onClick = onViewRecords),
             contentAlignment = Alignment.Center,
         ) {
-            Text("검사 기록 보기", color = ActionInk, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.save_complete_view_records), color = ActionInk, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
         Spacer(Modifier.height(14.dp))
@@ -198,7 +200,7 @@ private fun CompleteBottomActions(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "관리자 시스템에서 보기",
+                text = stringResource(R.string.save_complete_view_in_admin_console),
                 color = CompleteLinkBlue,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
